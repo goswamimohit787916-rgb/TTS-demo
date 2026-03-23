@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElevenClone - Pro Voice AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/lucide-static@0.321.0/font/lucide.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #070a13; color: #e2e8f0; font-family: 'Inter', sans-serif; }
+        .glass { background: #0f1524; border: 1px solid #1e293b; }
+        .active-tab { border-bottom: 2px solid #3b82f6; color: white; }
+    </style>
+</head>
+<body class="flex flex-col h-screen">
+
+    <nav class="border-b border-slate-800 px-6 py-4 flex justify-between items-center bg-[#070a13] sticky top-0 z-50">
+        <div class="text-xl font-bold tracking-tighter text-white flex items-center gap-2">
+            <i class="lucide-zap text-blue-500"></i> ElevenClone
+        </div>
+        <div class="flex gap-6 text-sm font-medium text-slate-400">
+            <button onclick="showTab('synthesis')" id="tab-synthesis" class="pb-1 active-tab">Synthesis</button>
+            <button onclick="showTab('lab')" id="tab-lab" class="pb-1">Voice Lab</button>
+            <button onclick="showTab('history')" id="tab-history" class="pb-1">History</button>
+        </div>
+        <button onclick="promptKey()" class="text-xs border border-slate-700 px-3 py-1 rounded hover:bg-slate-800 transition">API Settings</button>
+    </nav>
+
+    <main class="flex-1 overflow-y-auto p-6 md:p-12">
+        <section id="sect-synthesis" class="max-w-4xl mx-auto space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-2">
+                    <label class="text-[10px] uppercase font-bold text-slate-500">Model</label>
+                    <select id="modelSelect" class="w-full glass p-4 rounded-xl outline-none focus:ring-1 focus:ring-blue-500">
+                        <option value="eleven_multilingual_v2">Eleven Multilingual v2</option>
+                        <option value="eleven_turbo_v2">Eleven Turbo v2 (Low Latency)</option>
+                    </select>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[10px] uppercase font-bold text-slate-500">Voice</label>
+                    <select id="voiceSelect" class="w-full glass p-4 rounded-xl outline-none focus:ring-1 focus:ring-blue-500">
+                        <option value="21m00Tcm4TlvDq8ikWAM">Rachel</option>
+                        <option value="pNInz6obpgDQGcFmaJgB">Adam</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="relative">
+                <textarea id="ttsInput" class="w-full h-64 glass p-6 rounded-2xl text-lg focus:ring-2 focus:ring-blue-500/20 outline-none resize-none" placeholder="Enter text to synthesize..."></textarea>
+                <div id="charCounter" class="absolute bottom-4 right-6 text-xs text-slate-600">0 / 5000</div>
+            </div>
+
+            <div class="flex justify-between items-center">
+                <div id="audioPlayerContainer" class="hidden flex items-center gap-4 bg-slate-800/50 p-2 rounded-full pr-6">
+                    <audio id="audioPlayer" controls class="h-8"></audio>
+                </div>
+                <button onclick="generateSpeech()" id="genBtn" class="ml-auto bg-white text-black px-10 py-4 rounded-full font-bold hover:bg-blue-50 transition transform active:scale-95 flex items-center gap-2 shadow-xl shadow-blue-500/10">
+                    Generate <i class="lucide-play fill-black"></i>
+                </button>
+            </div>
+        </section>
+
+        <section id="sect-lab" class="hidden max-w-4xl mx-auto space-y-8">
+            <div class="text-center space-y-2">
+                <h2 class="text-2xl font-bold">Instant Voice Cloning</h2>
+                <p class="text-slate-400">Upload a 1-minute sample to clone any voice.</p>
+            </div>
+            <div class="glass border-dashed border-2 border-slate-700 rounded-3xl p-12 text-center hover:border-blue-500 transition cursor-pointer" onclick="document.getElementById('voiceUpload').click()">
+                <i class="lucide-upload-cloud size-12 mx-auto mb-4 text-slate-500"></i>
+                <p class="text-lg font-medium">Click to upload sample (MP3/WAV)</p>
+                <input type="file" id="voiceUpload" class="hidden" accept="audio/*">
+            </div>
+            <div class="space-y-4">
+                <input id="cloneName" type="text" placeholder="Voice Name (e.g. My Clone)" class="w-full glass p-4 rounded-xl outline-none">
+                <button onclick="cloneVoice()" class="w-full bg-blue-600 p-4 rounded-xl font-bold hover:bg-blue-500 transition">Add Voice to Library</button>
+            </div>
+        </section>
+
+        <section id="sect-history" class="hidden max-w-4xl mx-auto">
+            <div class="flex justify-between mb-6">
+                <h2 class="text-xl font-bold">Recent Generations</h2>
+                <button onclick="clearHistory()" class="text-sm text-red-400">Clear All</button>
+            </div>
+            <div id="historyList" class="space-y-3">
+                <p class="text-slate-500 text-center py-12">No history yet.</p>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // CORE STATE
+        let apiKey = localStorage.getItem('elevenlabs_key') || '';
+        
+        function promptKey() {
+            const key = prompt("Enter ElevenLabs API Key:", apiKey);
+            if(key) {
+                apiKey = key;
+                localStorage.setItem('elevenlabs_key', key);
+            }
+        }
+
+        function showTab(tab) {
+            ['synthesis', 'lab', 'history'].forEach(t => {
+                document.getElementById('sect-' + t).classList.add('hidden');
+                document.getElementById('tab-' + t).classList.remove('active-tab');
+            });
+            document.getElementById('sect-' + tab).classList.remove('hidden');
+            document.getElementById('tab-' + tab).classList.add('active-tab');
+        }
+
+        // TEXT TO SPEECH FEATURE
+        async function generateSpeech() {
+            if(!apiKey) return alert("Please set your API Key first!");
+            const text = document.getElementById('ttsInput').value;
+            const voiceId = document.getElementById('voiceSelect').value;
+            const modelId = document.getElementById('modelSelect').value;
+            const btn = document.getElementById('genBtn');
+
+            if(!text) return alert("Enter text!");
+
+            btn.innerText = "Processing...";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+                    method: 'POST',
+                    headers: { 'xi-api-key': apiKey, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text, model_id: modelId, voice_settings: { stability: 0.5, similarity_boost: 0.5 } })
+                });
+
+                if(!response.ok) throw new Error("API Error");
+
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                
+                const player = document.getElementById('audioPlayer');
+                player.src = url;
+                document.getElementById('audioPlayerContainer').classList.remove('hidden');
+                player.play();
+
+                saveToHistory(text, url);
+            } catch (e) {
+                alert("Generation failed: " + e.message);
+            } finally {
+                btn.innerHTML = 'Generate <i class="lucide-play"></i>';
+                btn.disabled = false;
+            }
+        }
+
+        // VOICE CLONING FEATURE
+        async function cloneVoice() {
+            const file = document.getElementById('voiceUpload').files[0];
+            const name = document.getElementById('cloneName').value;
+            if(!file || !name) return alert("Select a file and name the voice!");
+
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('files', file);
+
+            // API Call for cloning
+            alert("Cloning request sent! In a real setup, this connects to /v1/voices/add");
+        }
+
+        // HISTORY FEATURE
+        function saveToHistory(text, url) {
+            const list = document.getElementById('historyList');
+            if(list.innerText === "No history yet.") list.innerHTML = "";
+            
+            const div = document.createElement('div');
+            div.className = "glass p-4 rounded-xl flex justify-between items-center";
+            div.innerHTML = `
+                <div class="truncate pr-4 flex-1">
+                    <p class="text-sm truncate">${text}</p>
+                    <span class="text-[10px] text-slate-500">${new Date().toLocaleTimeString()}</span>
+                </div>
+                <a href="${url}" download="speech.mp3" class="p-2 hover:bg-slate-700 rounded"><i class="lucide-download size-4"></i></a>
+            `;
+            list.prepend(div);
+        }
+    </script>
+</body>
+</html>
