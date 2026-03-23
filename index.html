@@ -3,139 +3,190 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Qwen3 TTS</title>
+  <title>Qwen3 TTS - ElevenLabs Style</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     body { font-family: 'Inter', system_ui, sans-serif; }
-    .wave-bar { animation: wave 1.2s infinite ease-in-out; }
-    @keyframes wave { 0%,100% {height:25%} 50% {height:100%} }
-    @media (max-width: 640px) { .sidebar {display:none} .mobile-nav {display:flex} }
+    .wave-bar { animation: wave 1.4s infinite ease-in-out; }
+    @keyframes wave { 0%,100% {height: 20%} 50% {height: 100%} }
+    .eleven-accent { color: #10b981; }
   </style>
 </head>
-<body class="bg-zinc-950 text-white flex h-screen overflow-hidden">
+<body class="bg-zinc-950 text-zinc-100 flex h-screen overflow-hidden">
 
-  <!-- Sidebar (desktop) -->
-  <div class="hidden md:flex w-72 bg-zinc-900 flex-col border-r border-zinc-800">
-    <div class="p-6 flex items-center gap-3">
-      <div class="w-10 h-10 bg-violet-600 rounded-2xl flex items-center justify-center text-3xl font-bold">Q</div>
-      <span class="text-2xl font-semibold">Qwen3 TTS</span>
+  <!-- Left Sidebar - ElevenLabs style -->
+  <div class="w-64 bg-zinc-900 border-r border-zinc-800 flex flex-col">
+    <div class="p-5 flex items-center gap-3 border-b border-zinc-800">
+      <div class="w-8 h-8 bg-emerald-500 rounded-xl flex items-center justify-center text-white font-bold text-xl">Q</div>
+      <span class="font-semibold text-2xl tracking-tight">Qwen3</span>
     </div>
-    <nav class="flex-1 p-4 space-y-1">
-      <a onclick="switchPage(0)" class="nav-item flex items-center gap-3 px-5 py-4 rounded-3xl bg-zinc-800" id="nav-0"><i class="fas fa-pen-nib"></i> Generate</a>
-      <a onclick="switchPage(1)" class="nav-item flex items-center gap-3 px-5 py-4 rounded-3xl hover:bg-zinc-800" id="nav-1"><i class="fas fa-microphone"></i> Voices</a>
-      <a onclick="switchPage(2)" class="nav-item flex items-center gap-3 px-5 py-4 rounded-3xl hover:bg-zinc-800" id="nav-2"><i class="fas fa-folder"></i> Projects</a>
+
+    <nav class="flex-1 px-3 py-6 space-y-1 text-sm">
+      <a onclick="switchPage(0)" class="nav-item flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-zinc-800 text-white" id="nav-0">
+        <i class="fas fa-comment-dots"></i> <span class="font-medium">Text to Speech</span>
+      </a>
+      <a onclick="switchPage(1)" class="nav-item flex items-center gap-3 px-4 py-3.5 rounded-2xl hover:bg-zinc-800" id="nav-1">
+        <i class="fas fa-microphone"></i> <span class="font-medium">Voice Lab</span>
+      </a>
+      <a onclick="switchPage(2)" class="nav-item flex items-center gap-3 px-4 py-3.5 rounded-2xl hover:bg-zinc-800" id="nav-2">
+        <i class="fas fa-folder-open"></i> <span class="font-medium">Projects</span>
+      </a>
+      <a onclick="switchPage(3)" class="nav-item flex items-center gap-3 px-4 py-3.5 rounded-2xl hover:bg-zinc-800" id="nav-3">
+        <i class="fas fa-history"></i> <span class="font-medium">History</span>
+      </a>
     </nav>
+
     <div class="p-4 border-t border-zinc-800">
-      <div class="flex items-center gap-3 p-3 bg-zinc-800 rounded-3xl">
-        <img src="https://i.pravatar.cc/48?u=mohit" class="w-9 h-9 rounded-2xl">
-        <div class="text-sm"><div>Mohit</div><div id="credits" class="text-violet-400 text-xs">1240 credits</div></div>
+      <div class="flex items-center gap-3 px-4 py-3 bg-zinc-800 rounded-2xl cursor-pointer" onclick="alert('Profile & Credits - connect to D1')">
+        <img src="https://i.pravatar.cc/48?u=mohit" class="w-9 h-9 rounded-2xl ring-2 ring-emerald-500">
+        <div class="flex-1">
+          <div class="font-medium text-sm">Mohit</div>
+          <div class="text-emerald-400 text-xs font-medium flex items-center gap-1">
+            <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span> 
+            2480 credits
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- Main Content -->
-  <div class="flex-1 flex flex-col overflow-hidden" id="main-content">
-    <div id="page-0" class="flex-1 p-4 md:p-8 overflow-auto">
-      <div class="max-w-3xl mx-auto">
-        <div class="flex bg-zinc-900 rounded-3xl p-1 mb-6 w-fit">
-          <button onclick="setTab(0)" class="tab px-8 py-3 rounded-3xl font-medium bg-zinc-800" id="tab-0">Text</button>
-          <button onclick="setTab(1)" class="tab px-8 py-3 rounded-3xl font-medium text-zinc-400" id="tab-1">File</button>
-        </div>
-
-        <div class="bg-zinc-900 rounded-3xl p-6 md:p-8">
-          <textarea id="text-input" class="w-full h-48 bg-transparent text-lg focus:outline-none" placeholder="Enter your text here..."></textarea>
-          <div class="text-right text-xs text-zinc-500 mt-1" id="counter">0 / 2500</div>
-
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-            <div>
-              <label class="text-xs text-zinc-400 block mb-1">Voice</label>
-              <select id="voice-select" class="w-full bg-zinc-800 border border-zinc-700 rounded-3xl p-4"></select>
-            </div>
-            <div>
-              <label class="text-xs text-zinc-400 block mb-1">Language</label>
-              <select id="lang-select" class="w-full bg-zinc-800 border border-zinc-700 rounded-3xl p-4">
-                <option value="en">English</option>
-                <option value="zh">Chinese</option>
-                <!-- add more -->
-              </select>
-            </div>
-            <div>
-              <label class="text-xs text-zinc-400 block mb-1">Style</label>
-              <select id="style-select" class="w-full bg-zinc-800 border border-zinc-700 rounded-3xl p-4">
-                <option>Standard</option>
-                <option>Emotional</option>
-              </select>
-            </div>
-          </div>
-
-          <button onclick="generateAudio()" 
-            class="mt-8 w-full bg-violet-600 hover:bg-violet-500 py-5 rounded-3xl font-semibold text-lg">
-            Generate with Qwen3-TTS
-          </button>
-        </div>
-
-        <!-- Player -->
-        <div id="player" class="hidden mt-8 bg-zinc-900 rounded-3xl p-6">
-          <button onclick="togglePlay()" id="play-btn" class="w-16 h-16 bg-white text-black rounded-3xl text-4xl">▶</button>
-          <div id="waveform" class="flex gap-1 h-12 my-6 bg-zinc-800 rounded-2xl p-3"></div>
-          <a id="download-btn" href="#" download class="text-violet-400">↓ Download MP3</a>
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <!-- Top bar -->
+    <div class="h-14 border-b border-zinc-800 bg-zinc-900 px-6 flex items-center justify-between text-sm">
+      <div class="flex items-center gap-8">
+        <div onclick="setTab(0)" id="tab-text" class="cursor-pointer font-medium border-b-2 border-emerald-500 pb-1">Text to Speech</div>
+        <div onclick="setTab(1)" id="tab-file" class="cursor-pointer text-zinc-400 hover:text-zinc-100">Instant Voice Clone</div>
+      </div>
+      <div class="flex items-center gap-4 text-xs">
+        <div class="px-3 py-1 bg-zinc-800 rounded-full flex items-center gap-2">
+          <span class="text-emerald-400">●</span> Qwen3-TTS 1.7B
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Mobile nav -->
-  <div class="mobile-nav fixed bottom-0 left-0 right-0 bg-zinc-900 border-t py-3 hidden md:hidden">
-    <!-- similar icons -->
+    <div class="flex-1 p-6 md:p-10 overflow-auto bg-zinc-950" id="main-area">
+      <!-- Text to Speech Area -->
+      <div class="max-w-2xl mx-auto">
+        <textarea id="text-input" rows="8"
+          class="w-full bg-zinc-900 border border-zinc-700 focus:border-emerald-500 rounded-3xl p-6 text-lg placeholder-zinc-400 resize-none focus:outline-none"
+          placeholder="Paste or type your script here..."></textarea>
+
+        <div class="flex justify-end text-xs text-zinc-400 mt-2" id="counter">0 / 2500</div>
+
+        <!-- Voice Selector (ElevenLabs style) -->
+        <div class="mt-8">
+          <div class="text-xs uppercase tracking-widest text-zinc-400 mb-3">Voice</div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="voice-grid">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <button onclick="generateWithQwen3()" 
+          class="mt-10 w-full bg-emerald-500 hover:bg-emerald-600 transition-colors text-black font-semibold py-5 rounded-3xl text-lg flex items-center justify-center gap-3">
+          <i class="fas fa-waveform-lines"></i>
+          Generate with Qwen3 TTS
+        </button>
+      </div>
+
+      <!-- Player - ElevenLabs style waveform -->
+      <div id="player" class="hidden max-w-2xl mx-auto mt-16 bg-zinc-900 rounded-3xl p-6 border border-zinc-700">
+        <div class="flex items-center gap-5">
+          <button onclick="togglePlay()" id="play-btn"
+            class="w-14 h-14 bg-emerald-500 hover:bg-emerald-600 text-black rounded-2xl flex items-center justify-center text-4xl transition">
+            ▶
+          </button>
+
+          <div class="flex-1">
+            <div id="waveform" class="h-14 flex items-end gap-0.5 bg-zinc-800 rounded-2xl px-4 py-3"></div>
+          </div>
+
+          <div class="font-mono text-xs text-zinc-400 w-24" id="time">00:00 / 00:00</div>
+        </div>
+
+        <div class="mt-6 flex gap-4 text-sm">
+          <a id="download-btn" href="#" download="qwen3-output.mp3"
+            class="flex-1 text-center py-3 border border-zinc-700 hover:border-emerald-500 rounded-2xl transition">Download MP3</a>
+          <button onclick="regenerate()" 
+            class="flex-1 py-3 border border-zinc-700 hover:border-emerald-500 rounded-2xl transition">Regenerate</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer hint -->
+    <div class="h-12 bg-zinc-900 border-t border-zinc-800 text-xs flex items-center px-6 text-zinc-500">
+      Powered by Qwen3-TTS • Connected to external GPU via Cloudflare Worker + Replicate
+    </div>
   </div>
 
   <script>
-    // Real fetch to your Worker
-    const WORKER_URL = "https://your-worker.yourname.workers.dev";   // ← Change this
+    tailwind.config = { content: ["*"], theme: { extend: {} } };
 
     let currentAudioUrl = null;
+    let isPlaying = false;
+    const WORKER_URL = "https://your-qwen3-worker.workers.dev"; // ← Update after deploy
+
+    const sampleVoices = [
+      {id:1, name:"Default", accent:"en"},
+      {id:2, name:"Mohit Clone", accent:"hi"},
+      {id:3, name:"Emma", accent:"en"},
+      {id:4, name:"Raj", accent:"en"}
+    ];
+
+    function renderVoices() {
+      const grid = document.getElementById('voice-grid');
+      grid.innerHTML = '';
+      sampleVoices.forEach(v => {
+        const div = document.createElement('div');
+        div.className = `p-4 bg-zinc-900 border border-zinc-700 hover:border-emerald-500 rounded-3xl cursor-pointer transition text-center`;
+        div.innerHTML = `<div class="font-medium">\( {v.name}</div><div class="text-xs text-zinc-500"> \){v.accent}</div>`;
+        div.onclick = () => selectVoice(v.id);
+        grid.appendChild(div);
+      });
+    }
+
+    function selectVoice(id) {
+      alert(`Voice ${id} selected (will be sent to Worker for cloning/reference)`);
+    }
 
     document.getElementById('text-input').addEventListener('input', () => {
-      document.getElementById('counter').textContent = 
-        `${document.getElementById('text-input').value.length} / 2500`;
+      const len = document.getElementById('text-input').value.length;
+      document.getElementById('counter').textContent = `${len} / 2500`;
     });
 
-    async function generateAudio() {
+    async function generateWithQwen3() {
       const text = document.getElementById('text-input').value.trim();
-      if (!text) return alert("Enter text");
+      if (!text) return alert("Please enter text");
 
-      const voiceId = document.getElementById('voice-select').value;
-
+      // Real call to your Cloudflare Worker
       const res = await fetch(`${WORKER_URL}/api/generate`, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-          text,
-          voice_id: voiceId === "default" ? null : voiceId,
-          language: document.getElementById('lang-select').value
-        })
+        body: JSON.stringify({ text, model: "qwen3-tts-1.7b" })
       });
 
       const data = await res.json();
-      if (!data.success) return alert(data.error || "Generation failed");
+      if (!data.success) return alert(data.error || "Failed");
 
       currentAudioUrl = data.audio_url;
       document.getElementById('player').classList.remove('hidden');
       document.getElementById('download-btn').href = currentAudioUrl;
 
-      createWaveform();
+      createElevenWaveform();
       new Audio(currentAudioUrl).play();
     }
 
-    function createWaveform() {
-      const wf = document.getElementById('waveform');
-      wf.innerHTML = '';
-      for(let i=0; i<45; i++){
-        const b = document.createElement('div');
-        b.className = 'wave-bar bg-violet-500 w-1 rounded-full';
-        b.style.height = (30 + Math.random()*70) + '%';
-        wf.appendChild(b);
+    function createElevenWaveform() {
+      const container = document.getElementById('waveform');
+      container.innerHTML = '';
+      for (let i = 0; i < 60; i++) {
+        const bar = document.createElement('div');
+        bar.className = `wave-bar flex-1 bg-emerald-500 rounded-t`;
+        bar.style.height = `${25 + Math.random() * 75}%`;
+        bar.style.animationDelay = `-${i * 20}ms`;
+        container.appendChild(bar);
       }
     }
 
@@ -145,15 +196,27 @@
       audio.play();
     }
 
-    // Clone voice (upload 3s audio → send to worker → store in D1)
-    async function cloneVoice() {
-      // ... similar to previous version but POST to /api/clone
+    function regenerate() {
+      document.getElementById('text-input').focus();
     }
 
-    // Load cloned voices on start
-    async function loadVoices() {
-      // fetch from worker /api/voices
+    function switchPage(page) {
+      document.querySelectorAll('.nav-item').forEach((el, i) => {
+        el.classList.toggle('bg-zinc-800', i === page);
+        el.classList.toggle('text-white', i === page);
+      });
+      if (page === 1) alert("Voice Lab / Clone page - upload 3s audio here (stored in D1)");
     }
+
+    function setTab(n) {
+      document.getElementById('tab-text').style.borderBottom = n===0 ? '2px solid #10b981' : 'none';
+      document.getElementById('tab-file').style.borderBottom = n===1 ? '2px solid #10b981' : 'none';
+    }
+
+    // Init
+    renderVoices();
+    setTab(0);
+    switchPage(0);
   </script>
 </body>
 </html>
