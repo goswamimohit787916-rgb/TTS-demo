@@ -13,122 +13,119 @@
             theme: {
                 extend: {
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: { primary: '#1d273d', border: '#e4e7eb' }
+                    colors: { primary: '#1d273d', border: '#e4e7eb', bgMain: '#f7f8fa' }
                 }
             }
         }
     </script>
     <style>
-        body { background-color: #f7f8fa; color: #1d273d; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-        .app-container { background: white; height: 100vh; width: 100vw; display: flex; overflow: hidden; }
+        body { background-color: #f7f8fa; color: #1d273d; margin: 0; height: 100vh; display: flex; overflow: hidden; }
+        .platform-card { background: white; border: 1px solid #e4e7eb; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
         
-        /* Mobile Adaptability */
+        /* Sidebar Hide on Mobile */
         @media (max-width: 768px) {
             .sidebar { display: none; }
-            .main-area { padding: 12px !important; }
-            .controls-grid { grid-template-columns: 1fr !important; }
-            .action-row { flex-direction: column; gap: 8px; }
-            .action-row button { width: 100%; }
+            .main-content { padding: 16px !important; }
+            .controls-row { flex-direction: column; }
+            .controls-row select, .controls-row button { width: 100% !important; }
         }
 
-        /* Logic Animations */
+        /* Animations */
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        .loader { display: none; width: 18px; height: 18px; border: 2px solid #ddd; border-top: 2px solid #1d273d; border-radius: 50%; animation: spin 1s linear infinite; }
-        .working .loader { display: block; }
-        .working #genText { display: none; }
+        .spinner { display: none; width: 16px; height: 16px; border: 2px solid #ddd; border-top: 2px solid #1d273d; border-radius: 50%; animation: spin 1s linear infinite; }
+        .working .spinner { display: block; }
+        .working #btnText { display: none; }
         
-        /* Audio Wave Progress */
-        .progress-overlay { position: absolute; top: 0; left: 0; height: 100%; background: rgba(29, 39, 61, 0.3); pointer-events: none; width: 0%; transition: width 0.1s linear; }
-        textarea { border: 1px solid #e4e7eb; outline: none; transition: border 0.3s; resize: none; border-radius: 0 8px 8px 8px; }
+        /* Waveform Animation */
+        .wave-fill { position: absolute; top: 0; left: 0; height: 100%; background: rgba(29, 39, 61, 0.1); width: 0%; pointer-events: none; transition: width 0.1s linear; }
+        textarea { border: 1px solid #e4e7eb; border-radius: 0 8px 8px 8px; resize: none; outline: none; transition: border 0.3s; }
         textarea:focus { border-color: #3b82f6; }
     </style>
 </head>
-<body>
+<body class="p-0 md:p-6 flex items-center justify-center">
 
-    <div class="app-container">
-        <aside class="sidebar w-64 border-r border-border p-6 flex flex-col bg-white shrink-0">
-            <div class="font-bold text-xl mb-10 flex items-center gap-2">
-                <i class="fa-solid fa-bars-progress text-blue-600"></i> Generate
-            </div>
-            <nav class="space-y-1 flex-grow">
-                <div class="bg-slate-100 p-3 rounded-lg flex items-center gap-3 font-semibold cursor-pointer"><i class="fa-solid fa-microphone-lines"></i> Generate</div>
-                <div class="p-3 text-slate-500 flex items-center gap-3 hover:bg-slate-50 cursor-pointer"><i class="fa-solid fa-headset"></i> Voices</div>
-                <div class="p-3 text-slate-500 flex items-center gap-3 hover:bg-slate-50 cursor-pointer"><i class="fa-solid fa-diagram-project"></i> Projects</div>
-                <div class="p-3 text-slate-500 flex items-center gap-3 hover:bg-slate-50 cursor-pointer" onclick="setupAPI()"><i class="fa-solid fa-gear"></i> Settings</div>
+    <div class="platform-card w-full max-w-[1020px] h-full md:h-[680px] flex overflow-hidden">
+        
+        <aside class="sidebar w-[210px] border-r border-border p-5 flex flex-col bg-white">
+            <nav class="space-y-1.5 flex-grow">
+                <div class="flex items-center gap-3 p-3 bg-slate-100 rounded-lg font-medium text-sm">
+                    <i class="fa-solid fa-bars-progress text-lg"></i> Generate
+                </div>
+                <div class="flex items-center gap-3 p-3 text-slate-500 hover:bg-slate-50 rounded-lg text-sm cursor-pointer">
+                    <i class="fa-solid fa-headset text-lg"></i> Voices
+                </div>
+                <div class="flex items-center gap-3 p-3 text-slate-500 hover:bg-slate-50 rounded-lg text-sm cursor-pointer">
+                    <i class="fa-solid fa-diagram-project text-lg"></i> Projects
+                </div>
+                <div class="flex items-center gap-3 p-3 text-slate-500 hover:bg-slate-50 rounded-lg text-sm cursor-pointer" onclick="openKeyPrompt()">
+                    <i class="fa-solid fa-gear text-lg"></i> Settings
+                </div>
             </nav>
-            <div class="border-t border-border pt-6 mt-auto">
-                <div class="flex items-center gap-3">
-                    <img src="https://avatar.vercel.sh/user.png" class="size-10 rounded-full border border-border">
-                    <div class="text-xs">
-                        <p class="font-bold">John Doe</p>
-                        <p class="text-slate-500">john@example.com</p>
-                    </div>
+            <div class="space-y-4 border-t border-border pt-4">
+                <div class="flex items-center gap-3 p-3 text-slate-500 text-sm"><i class="fa-solid fa-question-circle text-lg"></i> Help</div>
+                <div class="flex items-center gap-3 px-3 py-1 border-t border-border pt-3">
+                    <img src="https://avatar.vercel.sh/john.png" class="size-9 rounded-full">
+                    <div class="truncate"><p class="font-semibold text-xs">John Doe</p><p class="text-[10px] text-slate-400">john@example.com</p></div>
                 </div>
             </div>
         </aside>
 
-        <main class="flex-1 flex flex-col p-8 bg-white main-area overflow-y-auto">
+        <main class="main-content flex-1 p-8 flex flex-col bg-white overflow-y-auto">
             
-            <div class="flex border border-border rounded-t-lg p-1 w-fit mb-[-1px] z-10 bg-white ml-0">
-                <button class="px-10 py-2 font-medium text-sm">Text</button>
+            <div class="flex border border-border rounded-t-lg p-1 w-fit bg-white">
+                <button class="px-10 py-2 font-medium text-sm text-primary">Text</button>
             </div>
 
-            <div class="border border-border p-6 rounded-b-lg rounded-tr-lg flex-grow flex flex-col min-h-[300px]">
-                <textarea id="userInput" class="flex-grow text-[15px] p-2 leading-relaxed" placeholder="Enter your text here or paste your script..."></textarea>
+            <div class="border border-border p-5 rounded-b-lg rounded-tr-lg flex-grow flex flex-col min-h-[300px]">
+                <textarea id="textInput" class="flex-grow text-[15px] p-2 leading-relaxed" placeholder="Enter your text here or paste your script..."></textarea>
                 <div class="mt-4 flex justify-between items-center text-[13px] text-slate-400">
-                    <span id="charLimit">0 / 2,500</span>
-                    <div class="flex gap-4 action-row">
-                        <button onclick="document.getElementById('fileUpload').click()" class="flex items-center gap-2 hover:text-blue-600">
-                            <i class="fa-solid fa-arrow-up-from-bracket text-xs"></i> Upload TXT
+                    <span id="charCount">0 / 2,500</span>
+                    <div class="flex gap-4">
+                        <button onclick="document.getElementById('fileIn').click()" class="hover:text-primary transition flex items-center gap-2">
+                            <i class="fa-solid fa-arrow-up-from-bracket"></i> Upload TXT
                         </button>
-                        <button onclick="triggerClone()" class="flex items-center gap-2 hover:text-blue-600">
-                            <i class="fa-solid fa-comment-dots text-xs"></i> Clone Voice
+                        <button onclick="triggerClone()" class="hover:text-primary transition flex items-center gap-2">
+                            <i class="fa-solid fa-comment-dots"></i> Clone Voice
                         </button>
                     </div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mt-6 items-end">
-                <div class="space-y-1">
-                    <label class="text-[10px] uppercase font-bold text-slate-400 ml-1">Voice</label>
-                    <select id="voiceID" class="w-full p-3 border border-border rounded-lg text-sm bg-white outline-none"></select>
-                </div>
-                <div class="space-y-1">
-                    <label class="text-[10px] uppercase font-bold text-slate-400 ml-1">Language</label>
-                    <select class="w-full p-3 border border-border rounded-lg text-sm bg-white outline-none">
-                        <option>English</option>
-                        <option>Spanish</option>
+            <div class="controls-row flex items-center gap-3 mt-6">
+                <div class="flex flex-1 gap-3">
+                    <select id="voiceID" class="flex-1 p-3 border border-border rounded-lg text-sm outline-none appearance-none bg-white">
+                        <option value="21m00Tcm4TlvDq8ikWAM">Voice Default Voice</option>
+                        <option value="pNInz6obpgDQGcFmaJgB">Voice Adam</option>
+                    </select>
+                    <select class="flex-1 p-3 border border-border rounded-lg text-sm bg-white appearance-none outline-none">
+                        <option>Language English</option>
+                    </select>
+                    <select class="flex-1 p-3 border border-border rounded-lg text-sm bg-white appearance-none outline-none">
+                        <option>Style Standard</option>
                     </select>
                 </div>
-                <div class="space-y-1">
-                    <label class="text-[10px] uppercase font-bold text-slate-400 ml-1">Style</label>
-                    <select class="w-full p-3 border border-border rounded-lg text-sm bg-white outline-none">
-                        <option>Standard</option>
-                        <option>Professional</option>
-                    </select>
-                </div>
-                <button id="genBtn" onclick="generateAudio()" class="h-[46px] bg-primary text-white rounded-lg font-bold hover:bg-black transition active:scale-95 flex items-center justify-center gap-2">
-                    <span id="genText">Generate</span>
-                    <div class="loader"></div>
+                <button id="genBtn" onclick="handleGenerate()" class="w-32 bg-primary text-white py-3 rounded-lg font-bold hover:bg-black transition active:scale-95 flex items-center justify-center gap-2">
+                    <span id="btnText">Generate</span>
+                    <div class="spinner"></div>
                 </button>
             </div>
 
-            <div id="playerBox" class="mt-8 border border-border p-5 rounded-xl hidden flex flex-col gap-3 bg-slate-50">
+            <div id="playerUI" class="mt-8 border border-border p-5 rounded-xl hidden flex flex-col gap-3 bg-slate-50">
                 <div class="flex items-center gap-5">
-                    <button onclick="playToggle()" id="controlBtn" class="size-12 rounded-full border bg-white flex items-center justify-center text-lg hover:bg-slate-50 shadow-sm transition">
-                        <i id="playIcon" class="fa-solid fa-play"></i>
+                    <button id="playBtn" class="size-12 rounded-full border bg-white flex items-center justify-center text-lg shadow-sm active:scale-90 transition">
+                        <i id="pIcon" class="fa-solid fa-play text-primary"></i>
                     </button>
-                    <div class="flex-1 relative h-14 bg-white rounded border border-border overflow-hidden">
-                        <img src="image_0.png" class="h-full w-full object-cover opacity-20" style="clip-path: inset(11% 6% 28% 31%);">
-                        <div id="audioWave" class="progress-overlay"></div>
+                    <div class="flex-1 relative h-14 bg-white rounded border overflow-hidden">
+                        <img src="image_0.png" class="h-full w-full object-cover opacity-20 grayscale pointer-events-none" style="clip-path: inset(11% 6% 28% 31%);">
+                        <div id="waveFill" class="wave-fill"></div>
                     </div>
                 </div>
-                <div class="flex items-center justify-between text-xs text-slate-500 px-1">
-                    <span id="timestamp" class="font-mono">00:00 / 00:00</span>
-                    <div class="flex items-center gap-5">
+                <div class="flex items-center justify-between text-[11px] text-slate-500">
+                    <span id="timeInfo">00:00 / 00:00</span>
+                    <div class="flex items-center gap-4">
                         <i class="fa-solid fa-volume-high"></i>
-                        <input type="range" id="volControl" min="0" max="1" step="0.1" value="1" class="w-20 accent-primary">
-                        <a id="downloadLink" download="speech.mp3" class="text-blue-600"><i class="fa-solid fa-download text-base"></i></a>
+                        <input type="range" id="vol" min="0" max="1" step="0.1" value="1" class="w-16 accent-primary">
+                        <a id="download" download="speech.mp3" class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-download text-base"></i></a>
                     </div>
                 </div>
             </div>
@@ -136,94 +133,69 @@
         </main>
     </div>
 
-    <input type="file" id="fileUpload" class="hidden" accept=".txt">
-    <input type="file" id="cloneUpload" class="hidden" accept="audio/*">
+    <input type="file" id="fileIn" class="hidden" accept=".txt">
     <audio id="audioEngine"></audio>
 
     <script>
-        let API_KEY = localStorage.getItem('eleven_key') || '';
-        const input = document.getElementById('userInput');
+        let KEY = localStorage.getItem('eleven_key') || '';
+        const input = document.getElementById('textInput');
         const audio = document.getElementById('audioEngine');
-        
-        const voices = [
-            {id: '21m00Tcm4TlvDq8ikWAM', name: 'Rachel'},
-            {id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam'},
-            {id: 'EXAVITQu4vr4xnSDxMaL', name: 'Bella'}
-        ];
 
-        // Populate Voices
-        const vs = document.getElementById('voiceID');
-        voices.forEach(v => vs.innerHTML += `<option value="${v.id}">Default Voice: ${v.name}</option>`);
-
-        // 1. API KEY SETUP
-        function setupAPI() {
-            const key = prompt("Enter ElevenLabs API Key:", API_KEY);
-            if(key) { API_KEY = key; localStorage.setItem('eleven_key', key); }
+        function openKeyPrompt() {
+            const val = prompt("Enter ElevenLabs API Key:", KEY);
+            if(val) { KEY = val; localStorage.setItem('eleven_key', val); }
         }
 
-        // 2. TEXT IMPORT LOGIC
-        document.getElementById('fileUpload').onchange = (e) => {
+        // Logic: Import Text
+        document.getElementById('fileIn').onchange = (e) => {
             const reader = new FileReader();
-            reader.onload = (f) => { input.value = f.target.result; updateChars(); };
+            reader.onload = (f) => { input.value = f.target.result; updateCount(); };
             reader.readAsText(e.target.files[0]);
         };
 
-        // 3. VOICE CLONING LOGIC
-        function triggerClone() {
-            const name = prompt("Name your cloned voice:");
-            if(!name) return;
-            document.getElementById('cloneUpload').click();
-            document.getElementById('cloneUpload').onchange = () => alert(`Cloning logic initialized for "${name}"`);
-        }
-
-        // 4. GENERATION LOGIC WITH ANIMATION
-        async function generateAudio() {
-            if(!API_KEY) return setupAPI();
-            if(!input.value) return alert("Please enter text first.");
+        // Logic: Generate Speech
+        async function handleGenerate() {
+            if(!KEY) return openKeyPrompt();
+            if(!input.value) return alert("Please enter text.");
 
             const btn = document.getElementById('genBtn');
             btn.classList.add('working');
             btn.disabled = true;
 
             try {
-                const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${vs.value}`, {
+                const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${document.getElementById('voiceID').value}`, {
                     method: 'POST',
-                    headers: { 'xi-api-key': API_KEY, 'Content-Type': 'application/json' },
+                    headers: { 'xi-api-key': KEY, 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         text: input.value,
                         model_id: "eleven_multilingual_v2",
-                        voice_settings: { stability: 0.5, similarity_boost: 0.8 }
+                        voice_settings: { stability: 0.5, similarity_boost: 0.75 }
                     })
                 });
 
-                if(!res.ok) throw new Error("API Connection Error");
+                if(!res.ok) throw new Error("Check API Key or Credits");
 
                 const blob = await res.blob();
                 const url = URL.createObjectURL(blob);
                 audio.src = url;
-                document.getElementById('downloadLink').href = url;
-                document.getElementById('playerBox').classList.remove('hidden');
+                document.getElementById('download').href = url;
+                document.getElementById('playerUI').classList.remove('hidden');
                 audio.play();
-            } catch (err) {
-                alert(err.message);
-            } finally {
-                btn.classList.remove('working');
-                btn.disabled = false;
-            }
+            } catch (err) { alert(err.message); } 
+            finally { btn.classList.remove('working'); btn.disabled = false; }
         }
 
-        // 5. PLAYER LOGIC & PROGRESS ANIMATION
-        function playToggle() {
-            if(audio.paused) audio.play(); else audio.pause();
-        }
-
-        audio.onplay = () => document.getElementById('playIcon').className = 'fa-solid fa-pause';
-        audio.onpause = () => document.getElementById('playIcon').className = 'fa-solid fa-play';
-
+        // Logic: Audio Player Progress
+        const pBtn = document.getElementById('playBtn');
+        pBtn.onclick = () => audio.paused ? audio.play() : audio.pause();
+        
+        audio.onplay = () => document.getElementById('pIcon').className = 'fa-solid fa-pause';
+        audio.onpause = () => document.getElementById('pIcon').className = 'fa-solid fa-play';
+        
         audio.ontimeupdate = () => {
-            const progress = (audio.currentTime / audio.duration) * 100;
-            document.getElementById('audioWave').style.width = progress + '%';
-            document.getElementById('timestamp').innerText = `${fmt(audio.currentTime)} / ${fmt(audio.duration || 0)}`;
+            const pct = (audio.currentTime / audio.duration) * 100;
+            document.getElementById('waveFill').style.width = pct + '%';
+            document.getElementById('timeInfo').innerText = `${fmt(audio.currentTime)} / ${fmt(audio.duration || 0)}`;
         };
 
         function fmt(s) {
@@ -232,11 +204,12 @@
             return `${m}:${sec}`;
         }
 
-        function updateChars() {
-            document.getElementById('charLimit').innerText = `${input.value.length.toLocaleString()} / 2,500`;
+        function updateCount() {
+            document.getElementById('charCount').innerText = `${input.value.length.toLocaleString()} / 2,500`;
         }
-        input.oninput = updateChars;
-        document.getElementById('volControl').oninput = (e) => audio.volume = e.target.value;
+        input.oninput = updateCount;
+        document.getElementById('vol').oninput = (e) => audio.volume = e.target.value;
+        function triggerClone() { alert("Voice Cloning metadata ready. Requires audio file upload."); }
     </script>
 </body>
 </html>
