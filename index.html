@@ -1,131 +1,159 @@
-<body class="bg-white text-zinc-900 flex flex-col md:flex-row h-screen overflow-hidden">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Qwen3 TTS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <style>
+    body { font-family: 'Inter', system_ui, sans-serif; }
+    .wave-bar { animation: wave 1.2s infinite ease-in-out; }
+    @keyframes wave { 0%,100% {height:25%} 50% {height:100%} }
+    @media (max-width: 640px) { .sidebar {display:none} .mobile-nav {display:flex} }
+  </style>
+</head>
+<body class="bg-zinc-950 text-white flex h-screen overflow-hidden">
 
-  <!-- Sidebar -->
-  <div class="hidden md:flex w-72 bg-zinc-100 flex-col border-r border-zinc-200">
-    <div class="p-6 flex items-center gap-3 border-b border-zinc-200">
-      <div class="w-10 h-10 bg-zinc-900 text-white rounded-2xl flex items-center justify-center text-xl font-bold">Q</div>
-      <span class="text-xl font-semibold">Qwen3 TTS</span>
+  <!-- Sidebar (desktop) -->
+  <div class="hidden md:flex w-72 bg-zinc-900 flex-col border-r border-zinc-800">
+    <div class="p-6 flex items-center gap-3">
+      <div class="w-10 h-10 bg-violet-600 rounded-2xl flex items-center justify-center text-3xl font-bold">Q</div>
+      <span class="text-2xl font-semibold">Qwen3 TTS</span>
     </div>
-
-    <nav class="flex-1 p-4 space-y-2 text-sm">
-      <a onclick="switchPage(0)" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-zinc-200 sidebar-active">
-        <i class="fas fa-pen-nib"></i> Generate
-      </a>
-      <a onclick="switchPage(1)" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-zinc-200">
-        <i class="fas fa-microphone"></i> Voices
-      </a>
-      <a onclick="switchPage(2)" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-zinc-200">
-        <i class="fas fa-folder"></i> Projects
-      </a>
-      <a onclick="switchPage(3)" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-zinc-200">
-        <i class="fas fa-cog"></i> Settings
-      </a>
+    <nav class="flex-1 p-4 space-y-1">
+      <a onclick="switchPage(0)" class="nav-item flex items-center gap-3 px-5 py-4 rounded-3xl bg-zinc-800" id="nav-0"><i class="fas fa-pen-nib"></i> Generate</a>
+      <a onclick="switchPage(1)" class="nav-item flex items-center gap-3 px-5 py-4 rounded-3xl hover:bg-zinc-800" id="nav-1"><i class="fas fa-microphone"></i> Voices</a>
+      <a onclick="switchPage(2)" class="nav-item flex items-center gap-3 px-5 py-4 rounded-3xl hover:bg-zinc-800" id="nav-2"><i class="fas fa-folder"></i> Projects</a>
     </nav>
+    <div class="p-4 border-t border-zinc-800">
+      <div class="flex items-center gap-3 p-3 bg-zinc-800 rounded-3xl">
+        <img src="https://i.pravatar.cc/48?u=mohit" class="w-9 h-9 rounded-2xl">
+        <div class="text-sm"><div>Mohit</div><div id="credits" class="text-violet-400 text-xs">1240 credits</div></div>
+      </div>
+    </div>
+  </div>
 
-    <div class="p-4 border-t border-zinc-200">
-      <div class="flex items-center gap-3 p-3 hover:bg-zinc-200 rounded-xl cursor-pointer">
-        <img src="https://i.pravatar.cc/48" class="w-10 h-10 rounded-xl">
-        <div>
-          <div class="font-medium text-sm">Mohit</div>
-          <div class="text-xs text-zinc-500">1240 credits</div>
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col overflow-hidden" id="main-content">
+    <div id="page-0" class="flex-1 p-4 md:p-8 overflow-auto">
+      <div class="max-w-3xl mx-auto">
+        <div class="flex bg-zinc-900 rounded-3xl p-1 mb-6 w-fit">
+          <button onclick="setTab(0)" class="tab px-8 py-3 rounded-3xl font-medium bg-zinc-800" id="tab-0">Text</button>
+          <button onclick="setTab(1)" class="tab px-8 py-3 rounded-3xl font-medium text-zinc-400" id="tab-1">File</button>
+        </div>
+
+        <div class="bg-zinc-900 rounded-3xl p-6 md:p-8">
+          <textarea id="text-input" class="w-full h-48 bg-transparent text-lg focus:outline-none" placeholder="Enter your text here..."></textarea>
+          <div class="text-right text-xs text-zinc-500 mt-1" id="counter">0 / 2500</div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+            <div>
+              <label class="text-xs text-zinc-400 block mb-1">Voice</label>
+              <select id="voice-select" class="w-full bg-zinc-800 border border-zinc-700 rounded-3xl p-4"></select>
+            </div>
+            <div>
+              <label class="text-xs text-zinc-400 block mb-1">Language</label>
+              <select id="lang-select" class="w-full bg-zinc-800 border border-zinc-700 rounded-3xl p-4">
+                <option value="en">English</option>
+                <option value="zh">Chinese</option>
+                <!-- add more -->
+              </select>
+            </div>
+            <div>
+              <label class="text-xs text-zinc-400 block mb-1">Style</label>
+              <select id="style-select" class="w-full bg-zinc-800 border border-zinc-700 rounded-3xl p-4">
+                <option>Standard</option>
+                <option>Emotional</option>
+              </select>
+            </div>
+          </div>
+
+          <button onclick="generateAudio()" 
+            class="mt-8 w-full bg-violet-600 hover:bg-violet-500 py-5 rounded-3xl font-semibold text-lg">
+            Generate with Qwen3-TTS
+          </button>
+        </div>
+
+        <!-- Player -->
+        <div id="player" class="hidden mt-8 bg-zinc-900 rounded-3xl p-6">
+          <button onclick="togglePlay()" id="play-btn" class="w-16 h-16 bg-white text-black rounded-3xl text-4xl">▶</button>
+          <div id="waveform" class="flex gap-1 h-12 my-6 bg-zinc-800 rounded-2xl p-3"></div>
+          <a id="download-btn" href="#" download class="text-violet-400">↓ Download MP3</a>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Main -->
-  <div class="flex-1 overflow-auto p-4 md:p-10">
-
-    <div class="max-w-3xl mx-auto">
-
-      <!-- Tabs -->
-      <div class="flex bg-zinc-100 rounded-xl p-1 mb-6 w-full sm:w-fit">
-        <button onclick="setTab(0)" class="flex-1 sm:flex-none px-6 py-2 rounded-lg bg-white shadow text-sm font-medium">Text</button>
-        <button onclick="setTab(1)" class="flex-1 sm:flex-none px-6 py-2 rounded-lg text-zinc-500 text-sm">Upload</button>
-      </div>
-
-      <!-- Card -->
-      <div class="bg-zinc-50 border border-zinc-200 rounded-2xl p-5 md:p-8">
-
-        <textarea id="input-text"
-          class="w-full bg-transparent text-base md:text-lg placeholder-zinc-400 focus:outline-none"
-          placeholder="Enter your script..."></textarea>
-
-        <div class="text-right text-xs text-zinc-400 mt-2">0 / 2500</div>
-
-        <!-- Actions -->
-        <div class="flex flex-col sm:flex-row gap-3 mt-6">
-          <button class="flex-1 py-3 bg-zinc-200 hover:bg-zinc-300 rounded-xl text-sm">
-            Upload TXT
-          </button>
-          <button class="flex-1 py-3 bg-zinc-900 text-white hover:bg-zinc-800 rounded-xl text-sm font-medium">
-            Clone Voice
-          </button>
-        </div>
-
-        <!-- Controls -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mt-8">
-
-          <select class="bg-white border border-zinc-300 rounded-xl px-3 py-2 text-sm">
-            <option>Default Voice</option>
-          </select>
-
-          <select class="bg-white border border-zinc-300 rounded-xl px-3 py-2 text-sm">
-            <option>English</option>
-            <option>Hindi</option>
-          </select>
-
-          <select class="bg-white border border-zinc-300 rounded-xl px-3 py-2 text-sm">
-            <option>Standard</option>
-          </select>
-
-          <button class="bg-zinc-900 text-white rounded-xl py-2 text-sm font-medium hover:bg-zinc-800">
-            Generate
-          </button>
-        </div>
-
-      </div>
-
-      <!-- Player -->
-      <div class="mt-6 bg-zinc-50 border border-zinc-200 rounded-xl p-4 hidden" id="player">
-
-        <div class="flex items-center gap-3">
-          <button class="w-10 h-10 bg-zinc-900 text-white rounded-lg">▶</button>
-
-          <div class="flex-1 h-10 bg-zinc-200 rounded-lg"></div>
-
-          <div class="text-xs text-zinc-500">00:00</div>
-        </div>
-
-        <div class="mt-3 flex items-center gap-2 text-xs text-zinc-500">
-          Volume
-          <input type="range" class="flex-1">
-          <button class="px-3 py-1 bg-zinc-200 rounded-lg">Download</button>
-        </div>
-
-      </div>
-
-    </div>
+  <!-- Mobile nav -->
+  <div class="mobile-nav fixed bottom-0 left-0 right-0 bg-zinc-900 border-t py-3 hidden md:hidden">
+    <!-- similar icons -->
   </div>
 
-  <!-- Mobile Bottom Nav -->
-  <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-zinc-200 flex justify-around py-2 text-xs">
-    <div onclick="switchPage(0)" class="flex flex-col items-center text-zinc-900">
-      <i class="fas fa-pen-nib text-lg"></i>
-      Generate
-    </div>
-    <div onclick="switchPage(1)" class="flex flex-col items-center text-zinc-500">
-      <i class="fas fa-microphone text-lg"></i>
-      Voices
-    </div>
-    <div onclick="switchPage(2)" class="flex flex-col items-center text-zinc-500">
-      <i class="fas fa-folder text-lg"></i>
-      Projects
-    </div>
-    <div onclick="switchPage(3)" class="flex flex-col items-center text-zinc-500">
-      <i class="fas fa-cog text-lg"></i>
-      Settings
-    </div>
-  </div>
+  <script>
+    // Real fetch to your Worker
+    const WORKER_URL = "https://your-worker.yourname.workers.dev";   // ← Change this
 
+    let currentAudioUrl = null;
+
+    document.getElementById('text-input').addEventListener('input', () => {
+      document.getElementById('counter').textContent = 
+        `${document.getElementById('text-input').value.length} / 2500`;
+    });
+
+    async function generateAudio() {
+      const text = document.getElementById('text-input').value.trim();
+      if (!text) return alert("Enter text");
+
+      const voiceId = document.getElementById('voice-select').value;
+
+      const res = await fetch(`${WORKER_URL}/api/generate`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          text,
+          voice_id: voiceId === "default" ? null : voiceId,
+          language: document.getElementById('lang-select').value
+        })
+      });
+
+      const data = await res.json();
+      if (!data.success) return alert(data.error || "Generation failed");
+
+      currentAudioUrl = data.audio_url;
+      document.getElementById('player').classList.remove('hidden');
+      document.getElementById('download-btn').href = currentAudioUrl;
+
+      createWaveform();
+      new Audio(currentAudioUrl).play();
+    }
+
+    function createWaveform() {
+      const wf = document.getElementById('waveform');
+      wf.innerHTML = '';
+      for(let i=0; i<45; i++){
+        const b = document.createElement('div');
+        b.className = 'wave-bar bg-violet-500 w-1 rounded-full';
+        b.style.height = (30 + Math.random()*70) + '%';
+        wf.appendChild(b);
+      }
+    }
+
+    function togglePlay() {
+      if (!currentAudioUrl) return;
+      const audio = new Audio(currentAudioUrl);
+      audio.play();
+    }
+
+    // Clone voice (upload 3s audio → send to worker → store in D1)
+    async function cloneVoice() {
+      // ... similar to previous version but POST to /api/clone
+    }
+
+    // Load cloned voices on start
+    async function loadVoices() {
+      // fetch from worker /api/voices
+    }
+  </script>
 </body>
+</html>
