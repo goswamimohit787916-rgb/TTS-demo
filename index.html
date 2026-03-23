@@ -2,224 +2,91 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <title>Voice Studio - Generate</title>
+    <title>Voice Studio</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f8f9fb; color: #333; }
-        .sidebar-item:hover { background-color: #f0f2f5; }
-        .sidebar-active { background-color: #f0f2f5; border-right: 3px solid #6366f1; }
-        .tab-active { border-bottom: 2px solid #6366f1; color: #333; font-weight: 600; }
-        textarea::placeholder { color: #9ca3af; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        body { font-family: 'Inter', sans-serif; background: #f8f9fb; }
+        .sidebar-active { background: #f0f2f5; border-right: 3px solid #6366f1; color: #111; }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
-
-    <div class="bg-white w-full max-w-5xl shadow-2xl rounded-xl flex overflow-hidden border border-gray-100 min-h-[650px]">
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white w-full max-w-5xl shadow-xl rounded-xl flex overflow-hidden border border-gray-100 min-h-[650px]">
         
         <aside class="w-64 border-r border-gray-100 flex flex-col justify-between py-6">
-            <div>
-                <nav class="space-y-1">
-                    <div class="sidebar-active sidebar-item px-6 py-3 flex items-center gap-3 cursor-pointer">
-                        <i class="fa-solid fa-bars-staggered text-gray-500 w-5"></i>
-                        <span class="text-sm font-medium">Generate</span>
-                    </div>
-                    <div class="sidebar-item px-6 py-3 flex items-center gap-3 cursor-pointer text-gray-500">
-                        <i class="fa-solid fa-headphones text-gray-400 w-5"></i>
-                        <span class="text-sm font-medium">Voices</span>
-                    </div>
-                    <div class="sidebar-item px-6 py-3 flex items-center gap-3 cursor-pointer text-gray-500">
-                        <i class="fa-solid fa-folder text-gray-400 w-5"></i>
-                        <span class="text-sm font-medium">Projects</span>
-                    </div>
-                    <div class="sidebar-item px-6 py-3 flex items-center gap-3 cursor-pointer text-gray-500">
-                        <i class="fa-solid fa-gear text-gray-400 w-5"></i>
-                        <span class="text-sm font-medium">Settings</span>
-                    </div>
-                </nav>
-            </div>
-
-            <div class="px-6 space-y-4">
-                <div class="flex items-center gap-3 text-gray-500 cursor-pointer hover:text-gray-800">
-                    <i class="fa-regular fa-circle-question w-5"></i>
-                    <span class="text-sm">Help</span>
+            <nav class="space-y-1">
+                <div class="sidebar-active px-6 py-3 flex items-center gap-3 cursor-pointer">
+                    <i class="fa-solid fa-bars-staggered w-5"></i><span class="text-sm font-medium">Generate</span>
                 </div>
-                <div class="pt-4 border-t border-gray-100 flex items-center gap-3">
-                    <img src="https://i.pravatar.cc/150?u=johndoe" class="w-10 h-10 rounded-full border border-gray-200" alt="Avatar">
-                    <div class="overflow-hidden">
-                        <p class="text-sm font-bold text-gray-800 truncate">John Doe</p>
-                        <p class="text-[11px] text-gray-500 truncate" id="userEmailDisplay">john@example.com</p>
-                    </div>
+                <div class="px-6 py-3 flex items-center gap-3 cursor-pointer text-gray-400 hover:text-gray-600">
+                    <i class="fa-solid fa-headphones w-5"></i><span class="text-sm">Voices</span>
                 </div>
+                <div class="px-6 py-3 flex items-center gap-3 cursor-pointer text-gray-400 hover:text-gray-600">
+                    <i class="fa-solid fa-folder w-5"></i><span class="text-sm">Projects</span>
+                </div>
+            </nav>
+            <div class="px-6 pt-4 border-t border-gray-100 flex items-center gap-3">
+                <img src="https://i.pravatar.cc/100" class="w-10 h-10 rounded-full">
+                <div><p class="text-sm font-bold text-gray-800">John Doe</p><p id="creditDisplay" class="text-[10px] text-indigo-600 font-bold">100 Credits</p></div>
             </div>
         </aside>
 
-        <main class="flex-1 p-8 flex flex-col">
-            
+        <main class="flex-1 p-8">
             <div class="flex border-b border-gray-100 mb-6">
-                <button class="px-8 py-3 text-sm tab-active" id="textTab">Text</button>
-                <button class="px-8 py-3 text-sm text-gray-400 hover:text-gray-600" id="fileTab">File Upload</button>
+                <button class="px-8 py-3 text-sm border-b-2 border-indigo-500 font-bold">Text</button>
+                <button class="px-8 py-3 text-sm text-gray-400">File Upload</button>
             </div>
 
-            <div class="border border-gray-200 rounded-lg p-1 mb-4">
-                <textarea id="inputText" class="w-full h-64 p-4 outline-none resize-none text-gray-700" placeholder="Enter your text here or paste your script..."></textarea>
-                <div class="px-4 pb-3 flex justify-between items-center text-[12px] text-gray-400">
-                    <span id="charCount">0 / 2,500</span>
-                </div>
+            <div class="border border-gray-200 rounded-lg p-4 mb-4">
+                <textarea id="text" class="w-full h-48 outline-none resize-none text-gray-700" placeholder="Enter your script..."></textarea>
+                <p class="text-[10px] text-gray-400 mt-2" id="charCount">0 / 2,500</p>
             </div>
 
             <div class="flex gap-3 mb-8">
-                <label class="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-md text-sm text-gray-600 cursor-pointer hover:bg-gray-50 transition-all">
-                    <i class="fa-solid fa-arrow-up-from-bracket text-xs"></i>
-                    <span>Upload TXT</span>
-                    <input type="file" id="txtFile" class="hidden" accept=".txt">
+                <label class="px-4 py-2 border rounded-md text-sm cursor-pointer hover:bg-gray-50 flex items-center gap-2">
+                    <i class="fa-solid fa-microphone"></i> Clone Voice
+                    <input type="file" id="cloneFile" class="hidden">
                 </label>
-                <label class="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-md text-sm text-gray-600 cursor-pointer hover:bg-gray-50 transition-all">
-                    <i class="fa-solid fa-microphone-lines text-xs"></i>
-                    <span>Clone Voice</span>
-                    <input type="file" id="voiceFile" class="hidden" accept=".pth,.wav">
-                </label>
-                <span id="cloneBadge" class="hidden text-[10px] bg-blue-100 text-blue-600 px-2 py-1 rounded flex items-center">File Attached</span>
             </div>
 
             <div class="flex items-center gap-4 mb-8">
                 <div class="flex-1 grid grid-cols-3 gap-3">
-                    <div class="border border-gray-200 rounded-md px-3 py-2 flex justify-between items-center cursor-pointer hover:border-gray-300">
-                        <span class="text-xs text-gray-500">Voice</span>
-                        <select id="voiceId" class="text-xs font-medium outline-none bg-transparent">
-                            <option>Default Voice</option>
-                            <option>Premium Female</option>
-                            <option>Deep Male</option>
-                        </select>
-                    </div>
-                    <div class="border border-gray-200 rounded-md px-3 py-2 flex justify-between items-center">
-                        <span class="text-xs text-gray-500">Language</span>
-                        <select id="lang" class="text-xs font-medium outline-none bg-transparent">
-                            <option>English</option>
-                            <option>Spanish</option>
-                            <option>Chinese</option>
-                        </select>
-                    </div>
-                    <div class="border border-gray-200 rounded-md px-3 py-2 flex justify-between items-center">
-                        <span class="text-xs text-gray-500">Style</span>
-                        <select id="style" class="text-xs font-medium outline-none bg-transparent">
-                            <option>Standard</option>
-                            <option>Expressive</option>
-                            <option>Formal</option>
-                        </select>
-                    </div>
+                    <select id="v" class="border rounded-md px-3 py-2 text-xs font-medium outline-none"><option>Default Voice</option></select>
+                    <select class="border rounded-md px-3 py-2 text-xs font-medium outline-none"><option>English</option></select>
+                    <select class="border rounded-md px-3 py-2 text-xs font-medium outline-none"><option>Standard</option></select>
                 </div>
-                <button onclick="handleGenerate()" id="genBtn" class="bg-white border border-gray-200 px-8 py-2 rounded-md font-medium text-sm hover:bg-gray-50 active:scale-95 transition-all">
-                    Generate
-                </button>
+                <button onclick="gen()" id="gb" class="border px-8 py-2 rounded-md font-medium text-sm hover:bg-gray-50">Generate</button>
             </div>
 
-            <div id="playerSection" class="border border-gray-100 bg-[#fcfcfd] rounded-lg p-6 hidden">
+            <div id="ps" class="border bg-[#fcfcfd] rounded-lg p-6 hidden animate-pulse">
                 <div class="flex items-center gap-6">
-                    <button id="playToggle" class="w-12 h-12 rounded-full bg-white border border-gray-100 shadow-sm flex items-center justify-center text-gray-800 hover:text-indigo-600">
-                        <i class="fa-solid fa-play ml-1"></i>
-                    </button>
-                    <div class="flex-1 h-12 flex items-center gap-[2px]">
-                        <div class="h-2 w-1 bg-gray-200 rounded-full"></div>
-                        <div class="h-4 w-1 bg-gray-200 rounded-full"></div>
-                        <div class="h-8 w-1 bg-gray-200 rounded-full"></div>
-                        <div class="h-10 w-1 bg-gray-300 rounded-full"></div>
-                        <div class="h-6 w-1 bg-indigo-200 rounded-full"></div>
-                        <div class="h-8 w-1 bg-indigo-400 rounded-full"></div>
-                        <div class="h-10 w-1 bg-indigo-500 rounded-full"></div>
-                        <div class="h-5 w-1 bg-gray-200 rounded-full"></div>
-                        <div class="h-10 w-1 bg-gray-200 rounded-full"></div>
-                        <div class="h-4 w-1 bg-gray-200 rounded-full"></div>
-                        <div class="h-8 w-1 bg-gray-200 rounded-full"></div>
-                        <div class="h-6 w-1 bg-gray-200 rounded-full"></div>
-                    </div>
+                    <button id="pp" class="w-12 h-12 rounded-full bg-white border flex items-center justify-center shadow-sm"><i class="fa-solid fa-play ml-1"></i></button>
+                    <div class="flex-1 h-8 bg-gray-200 rounded-md overflow-hidden relative"><div id="prog" class="h-full bg-indigo-500 w-0 transition-all"></div></div>
                 </div>
-                <div class="flex items-center justify-between mt-4 text-[11px] text-gray-400 font-medium">
-                    <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-caret-right"></i>
-                        <span id="timeDisplay">00:00 / 00:15</span>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <i class="fa-solid fa-volume-high"></i>
-                        <input type="range" class="w-24 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-500">
-                        <a id="downloadBtn" href="#" download class="hover:text-gray-800">
-                            <i class="fa-solid fa-download"></i>
-                        </a>
-                    </div>
-                </div>
+                <audio id="au" class="hidden"></audio>
             </div>
-            <audio id="audioElement" class="hidden"></audio>
         </main>
     </div>
 
     <script>
-        // CHARACTER COUNTER
-        const textInput = document.getElementById('inputText');
-        const charCount = document.getElementById('charCount');
-        textInput.addEventListener('input', () => {
-            const count = textInput.value.length;
-            charCount.innerText = `${count.toLocaleString()} / 2,500`;
-        });
+        async function gen() {
+            const b = document.getElementById('gb');
+            const fd = new FormData();
+            fd.append("text", document.getElementById('text').value);
+            fd.append("user_id", "user_admin_01");
+            if(document.getElementById('cloneFile').files[0]) fd.append("voice_file", document.getElementById('cloneFile').files[0]);
 
-        // FILE CLONE UI
-        const voiceFile = document.getElementById('voiceFile');
-        const cloneBadge = document.getElementById('cloneBadge');
-        voiceFile.addEventListener('change', () => {
-            if(voiceFile.files.length > 0) cloneBadge.classList.remove('hidden');
-        });
-
-        // GENERATION LOGIC
-        async function handleGenerate() {
-            const btn = document.getElementById('genBtn');
-            const text = textInput.value;
-            const cloneFile = voiceFile.files[0];
-            
-            if(!text) return alert("Please enter text first");
-
-            btn.disabled = true;
-            btn.innerText = "Synthesizing...";
-
-            const formData = new FormData();
-            formData.append("user_id", "user_123"); // From D1
-            formData.append("text", text);
-            if(cloneFile) formData.append("voice_file", cloneFile);
-
+            b.innerText = "Synthesizing..."; b.disabled = true;
             try {
-                // Point to your Cloudflare Pages Function
-                const res = await fetch('/api/generate', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if(!res.ok) throw new Error("Check D1 Credits or API Key");
-
+                const res = await fetch('/api/generate', { method: 'POST', body: fd });
                 const blob = await res.blob();
                 const url = URL.createObjectURL(blob);
-                const audio = document.getElementById('audioElement');
-                
-                audio.src = url;
-                document.getElementById('downloadBtn').href = url;
-                document.getElementById('playerSection').classList.remove('hidden');
-                
-                // Audio controls
-                const playToggle = document.getElementById('playToggle');
-                playToggle.onclick = () => {
-                    if(audio.paused) {
-                        audio.play();
-                        playToggle.innerHTML = '<i class="fa-solid fa-pause"></i>';
-                    } else {
-                        audio.pause();
-                        playToggle.innerHTML = '<i class="fa-solid fa-play ml-1"></i>';
-                    }
-                };
-            } catch (err) {
-                alert(err.message);
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Generate";
-            }
+                document.getElementById('ps').classList.remove('hidden');
+                document.getElementById('au').src = url;
+                document.getElementById('au').play();
+            } catch (e) { alert("Error"); }
+            b.innerText = "Generate"; b.disabled = false;
         }
     </script>
 </body>
