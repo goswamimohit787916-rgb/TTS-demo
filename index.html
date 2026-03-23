@@ -1,76 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
     <script src="https://cdn.tailwindcss.com"></script>
-    <title>Qwen3-TTS Pro Studio</title>
+    <title>Qwen3 Studio</title>
 </head>
-<body class="bg-[#09090b] text-zinc-200 min-h-screen flex items-center justify-center p-4">
-    <div class="w-full max-w-2xl bg-[#121214] border border-zinc-800 rounded-2xl p-8 shadow-2xl">
-        <h1 class="text-2xl font-bold mb-6 flex items-center gap-2 text-white">
-            <span class="bg-blue-600 w-3 h-8 rounded-full"></span> Qwen3-TTS Pro
-        </h1>
-
-        <div class="space-y-6">
-            <textarea id="text" class="w-full h-40 bg-zinc-900 border border-zinc-800 rounded-xl p-4 outline-none focus:ring-1 focus:ring-blue-500 text-lg" placeholder="Enter text to speak..."></textarea>
-
-            <div class="grid grid-cols-2 gap-6">
-                <div class="space-y-4">
-                    <label class="text-sm font-medium text-zinc-400">Voice Mode</label>
-                    <select id="mode" onchange="toggleClone()" class="w-full bg-zinc-800 border-none rounded-lg p-3">
-                        <option value="preset">Preset Voices</option>
-                        <option value="clone">Voice Cloning (Upload)</option>
-                    </select>
-                    
-                    <div id="clone-ui" class="hidden">
-                        <input type="file" id="ref_audio" accept="audio/*" class="text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500">
-                    </div>
-                </div>
-
-                <div class="space-y-4">
-                    <label class="text-sm font-medium text-zinc-400">Settings</label>
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs">Speed</span>
-                        <input type="range" id="speed" min="0.5" max="2.0" step="0.1" value="1.0" class="w-full">
-                    </div>
-                </div>
-            </div>
-
-            <button onclick="generate()" id="btn" class="w-full bg-white text-black font-bold py-4 rounded-xl hover:bg-zinc-200 transition-all">Generate High-Fidelity Audio</button>
+<body class="bg-zinc-950 text-white flex items-center justify-center min-h-screen">
+    <div class="w-full max-w-xl bg-zinc-900 p-8 rounded-3xl border border-zinc-800 shadow-2xl">
+        <div class="flex justify-between mb-8">
+            <h1 class="text-2xl font-bold">Qwen3 <span class="text-blue-500">Audio</span></h1>
+            <span id="credits" class="text-green-500 font-mono text-sm">100 Credits</span>
         </div>
 
-        <div id="player" class="mt-8 pt-8 border-t border-zinc-800 hidden">
-            <audio id="audio-out" controls class="w-full accent-blue-600"></audio>
-        </div>
+        <textarea id="text" class="w-full h-40 bg-zinc-800 rounded-2xl p-4 outline-none border border-transparent focus:border-blue-500 mb-6" placeholder="Type your script..."></textarea>
+        
+        <input type="file" id="voice" class="block w-full text-xs text-zinc-500 mb-6 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-blue-600 file:text-white">
+
+        <button onclick="run()" id="btn" class="w-full bg-white text-black font-bold py-4 rounded-2xl hover:scale-[0.98] transition-transform">Generate Voice</button>
+        
+        <audio id="player" controls class="w-full mt-8 hidden accent-blue-500"></audio>
     </div>
 
     <script>
-        function toggleClone() {
-            document.getElementById('clone-ui').classList.toggle('hidden', document.getElementById('mode').value !== 'clone');
-        }
-
-        async function generate() {
+        async function run() {
             const btn = document.getElementById('btn');
-            const formData = new FormData();
-            
-            formData.append('text', document.getElementById('text').value);
-            formData.append('speed', document.getElementById('speed').value);
-            
-            if(document.getElementById('mode').value === 'clone') {
-                const file = document.getElementById('ref_audio').files[0];
-                if(!file) return alert("Upload a 5-10 second sample for cloning!");
-                formData.append('ref_audio', file);
-            }
+            const fd = new FormData();
+            fd.append("text", document.getElementById('text').value);
+            fd.append("user_id", "user_123");
+            if(document.getElementById('voice').files[0]) fd.append("voice_file", document.getElementById('voice').files[0]);
 
-            btn.disabled = true; btn.innerText = "Synthesizing...";
+            btn.innerText = "Synthesizing...";
+            btn.disabled = true;
 
-            try {
-                const response = await fetch('YOUR_WORKER_URL', { method: 'POST', body: formData });
-                const blob = await response.blob();
-                document.getElementById('audio-out').src = URL.createObjectURL(blob);
+            const res = await fetch('/api/generate', { method: 'POST', body: fd });
+            if (res.ok) {
+                const blob = await res.blob();
+                document.getElementById('player').src = URL.createObjectURL(blob);
                 document.getElementById('player').classList.remove('hidden');
-            } catch (e) { alert("Error connecting to server"); }
-            finally { btn.disabled = false; btn.innerText = "Generate High-Fidelity Audio"; }
+            } else {
+                alert("Check console for error");
+            }
+            btn.innerText = "Generate Voice";
+            btn.disabled = false;
         }
     </script>
 </body>
