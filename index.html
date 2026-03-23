@@ -1,270 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <title>Voice Studio - Actual Data Pro</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f8f9fb; color: #333; -webkit-font-smoothing: antialiased; }
-        .sidebar-item { transition: all 0.2s; border-right: 3px solid transparent; }
-        .sidebar-item:hover { background-color: #f0f2f5; color: #111; }
-        .sidebar-active { background-color: #f0f2f5; border-right: 3px solid #6366f1; color: #111; font-weight: 600; }
-        .tab-active { border-bottom: 2px solid #6366f1; color: #111; font-weight: 600; }
-        textarea::placeholder { color: #9ca3af; font-weight: 400; }
-        .glass-player { background: #fcfcfd; border: 1px solid #f1f3f5; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Voice Generator</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
 
-    <div class="bg-white w-full max-w-6xl shadow-2xl rounded-2xl flex overflow-hidden border border-gray-100 min-h-[700px]">
-        
-        <aside class="w-64 border-r border-gray-100 flex flex-col justify-between py-8">
-            <div>
-                <div class="px-6 mb-8">
-                    <div class="flex items-center gap-2 text-indigo-600">
-                        <i class="fa-solid fa-wand-magic-sparkles text-xl"></i>
-                        <span class="text-xl font-extrabold tracking-tight text-gray-900">Qwen<span class="text-indigo-600">Audio</span></span>
-                    </div>
-                </div>
+<body class="bg-black text-white flex items-center justify-center min-h-screen">
 
-                <nav class="space-y-1">
-                    <div class="sidebar-active sidebar-item px-6 py-3 flex items-center gap-3 cursor-pointer">
-                        <i class="fa-solid fa-bars-staggered w-5"></i>
-                        <span class="text-sm">Generate</span>
-                    </div>
-                    <div class="sidebar-item px-6 py-3 flex items-center gap-3 cursor-pointer text-gray-400">
-                        <i class="fa-solid fa-headphones w-5"></i>
-                        <span class="text-sm">Voices</span>
-                    </div>
-                    <div class="sidebar-item px-6 py-3 flex items-center gap-3 cursor-pointer text-gray-400">
-                        <i class="fa-solid fa-folder w-5"></i>
-                        <span class="text-sm">Projects</span>
-                    </div>
-                    <div class="sidebar-item px-6 py-3 flex items-center gap-3 cursor-pointer text-gray-400">
-                        <i class="fa-solid fa-gear w-5"></i>
-                        <span class="text-sm">Settings</span>
-                    </div>
-                </nav>
-            </div>
+<div class="w-full max-w-xl p-4">
 
-            <div class="px-6 space-y-5">
-                <div class="flex items-center gap-3 text-gray-400 cursor-pointer hover:text-gray-800 transition-colors">
-                    <i class="fa-regular fa-circle-question w-5"></i>
-                    <span class="text-sm">Help</span>
-                </div>
-                <div class="pt-5 border-t border-gray-100 flex items-center gap-3">
-                    <div class="relative">
-                        <img id="userAvatar" src="https://i.pravatar.cc/150?u=admin" class="w-10 h-10 rounded-full border border-gray-200" alt="User">
-                        <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
-                    </div>
-                    <div class="overflow-hidden">
-                        <p id="userName" class="text-sm font-bold text-gray-900 truncate">Loading...</p>
-                        <p id="userEmail" class="text-[10px] text-gray-500 truncate">syncing d1...</p>
-                        <p id="creditCount" class="text-[10px] font-bold text-indigo-600 mt-0.5">0 Credits</p>
-                    </div>
-                </div>
-            </div>
-        </aside>
+  <h1 class="text-2xl font-bold mb-4 text-center">Qwen3 AI Voice</h1>
 
-        <main class="flex-1 p-10 flex flex-col bg-white">
-            
-            <div class="flex border-b border-gray-100 mb-8">
-                <button class="px-10 py-4 text-sm tab-active" id="textTab">Text</button>
-                <button class="px-10 py-4 text-sm text-gray-400 hover:text-gray-600 transition-colors" id="fileTab">File Upload</button>
-            </div>
+  <!-- TEXT INPUT -->
+  <textarea id="text"
+    class="w-full p-3 rounded bg-gray-900 border border-gray-700"
+    rows="5"
+    placeholder="Enter text here..."></textarea>
 
-            <div class="border border-gray-200 rounded-xl p-2 mb-6 focus-within:border-indigo-300 transition-all shadow-sm">
-                <textarea id="inputText" class="w-full h-64 p-5 outline-none resize-none text-gray-700 text-lg leading-relaxed" placeholder="Enter your text here or paste your script..."></textarea>
-                <div class="px-5 pb-4 flex justify-between items-center text-[12px] font-medium text-gray-400">
-                    <span id="charCount">0 / 2,500</span>
-                    <span class="text-indigo-400 italic">Qwen3-1.7B Engine Ready</span>
-                </div>
-            </div>
+  <!-- FILE INPUT -->
+  <input type="file" id="audio" class="mt-3 w-full" accept="audio/*"/>
 
-            <div class="flex gap-4 mb-10">
-                <label class="flex items-center gap-3 px-5 py-2.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 cursor-pointer hover:bg-gray-50 hover:border-gray-300 transition-all">
-                    <i class="fa-solid fa-file-arrow-up text-indigo-500"></i>
-                    <span>Upload TXT</span>
-                    <input type="file" id="txtFile" class="hidden" accept=".txt">
-                </label>
-                <label class="flex items-center gap-3 px-5 py-2.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 cursor-pointer hover:bg-gray-50 hover:border-gray-300 transition-all relative">
-                    <i class="fa-solid fa-microchip text-indigo-500"></i>
-                    <span>Clone Voice (.pth)</span>
-                    <input type="file" id="voiceFile" class="hidden" accept=".pth,.wav,.mp3">
-                    <div id="fileIndicator" class="hidden absolute -top-2 -right-2 w-5 h-5 bg-indigo-600 text-white text-[10px] flex items-center justify-center rounded-full shadow-lg">1</div>
-                </label>
-            </div>
+  <!-- BUTTON -->
+  <button onclick="generate()"
+    class="mt-4 w-full bg-blue-600 hover:bg-blue-700 p-3 rounded">
+    Generate Audio
+  </button>
 
-            <div class="flex items-center gap-6 mb-10 bg-gray-50/50 p-4 rounded-xl border border-gray-100">
-                <div class="flex-1 grid grid-cols-3 gap-4">
-                    <div class="bg-white border border-gray-200 rounded-lg px-4 py-2.5 flex flex-col justify-center">
-                        <span class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Voice</span>
-                        <select id="voiceId" class="text-sm font-semibold outline-none bg-transparent text-gray-800">
-                            <option value="qwen_standard">Qwen Default</option>
-                            <option value="clone_active">Active Clone</option>
-                        </select>
-                    </div>
-                    <div class="bg-white border border-gray-200 rounded-lg px-4 py-2.5 flex flex-col justify-center">
-                        <span class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Language</span>
-                        <select id="lang" class="text-sm font-semibold outline-none bg-transparent text-gray-800">
-                            <option>English</option>
-                            <option>Chinese</option>
-                            <option>Japanese</option>
-                        </select>
-                    </div>
-                    <div class="bg-white border border-gray-200 rounded-lg px-4 py-2.5 flex flex-col justify-center">
-                        <span class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Style</span>
-                        <select id="style" class="text-sm font-semibold outline-none bg-transparent text-gray-800">
-                            <option>Standard</option>
-                            <option>Narrative</option>
-                            <option>Expressive</option>
-                        </select>
-                    </div>
-                </div>
-                <button onclick="handleGenerate()" id="genBtn" class="bg-white border border-gray-200 px-10 py-4 rounded-xl font-bold text-sm shadow-sm hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all active:scale-95">
-                    Generate
-                </button>
-            </div>
+  <!-- STATUS -->
+  <p id="status" class="mt-3 text-sm text-gray-400"></p>
 
-            <div id="playerSection" class="glass-player rounded-2xl p-8 hidden animate-in slide-in-from-bottom duration-500">
-                <div class="flex items-center gap-8">
-                    <button id="playToggle" class="w-14 h-14 rounded-full bg-white border border-gray-100 shadow-md flex items-center justify-center text-indigo-600 hover:scale-105 transition-transform">
-                        <i class="fa-solid fa-play text-xl ml-1"></i>
-                    </button>
-                    
-                    <div class="flex-1">
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest" id="audioStatus">Synthesis Complete</span>
-                            <span class="text-[11px] font-mono text-indigo-500" id="timeDisplay">00:00 / 00:00</span>
-                        </div>
-                        <div class="h-2 w-full bg-gray-100 rounded-full overflow-hidden cursor-pointer" id="progressContainer">
-                            <div id="progressBar" class="h-full bg-indigo-500 w-0 transition-all duration-100"></div>
-                        </div>
-                    </div>
+  <!-- AUDIO PLAYER -->
+  <audio id="player" controls class="mt-4 w-full hidden"></audio>
 
-                    <div class="flex items-center gap-5 text-gray-400">
-                        <a id="downloadBtn" href="#" download class="hover:text-indigo-600 transition-colors">
-                            <i class="fa-solid fa-cloud-arrow-down text-xl"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <audio id="audioElement" class="hidden"></audio>
-        </main>
-    </div>
+</div>
 
-    <script>
-        const ACTIVE_USER_ID = "user_admin_01"; // Matches your D1 Seed
+<script>
+const API_URL = "https://8001-01kmcy2q8mjjjj0dwk6r08ghy5.cloudspaces.litng.ai";
 
-        // 1. INITIALIZE DATA FROM D1
-        window.addEventListener('DOMContentLoaded', async () => {
-            try {
-                const res = await fetch(`/api/user-info?id=${ACTIVE_USER_ID}`);
-                const data = await res.json();
-                
-                if (data.email) {
-                    document.getElementById('userName').innerText = data.email.split('@')[0];
-                    document.getElementById('userEmail').innerText = data.email;
-                    document.getElementById('creditCount').innerText = `${data.credits} Credits`;
-                    
-                    // If credits are low, change color to red
-                    if (data.credits < 10) document.getElementById('creditCount').classList.replace('text-indigo-600', 'text-red-500');
-                }
-            } catch (e) {
-                console.error("D1 Connection Failed");
-            }
-        });
+async function generate() {
+  const text = document.getElementById("text").value;
+  const fileInput = document.getElementById("audio");
+  const status = document.getElementById("status");
+  const player = document.getElementById("player");
 
-        // 2. CHARACTER COUNTER
-        const textInput = document.getElementById('inputText');
-        textInput.addEventListener('input', () => {
-            document.getElementById('charCount').innerText = `${textInput.value.length.toLocaleString()} / 2,500`;
-        });
+  if (!text) {
+    alert("Enter text");
+    return;
+  }
 
-        // 3. FILE INDICATOR
-        document.getElementById('voiceFile').addEventListener('change', (e) => {
-            if (e.target.files[0]) document.getElementById('fileIndicator').classList.remove('hidden');
-        });
+  status.innerText = "Generating... (first time may take 30s)";
+  player.classList.add("hidden");
 
-        // 4. MAIN GENERATION LOGIC
-        async function handleGenerate() {
-            const btn = document.getElementById('genBtn');
-            const text = textInput.value;
-            const voiceFile = document.getElementById('voiceFile').files[0];
-            
-            if (!text) return alert("Text content is required.");
+  try {
+    let response;
 
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Synthesizing...';
+    // VOICE CLONE MODE
+    if (fileInput.files.length > 0) {
+      const formData = new FormData();
+      formData.append("text", text);
+      formData.append("audio", fileInput.files[0]);
 
-            const formData = new FormData();
-            formData.append("user_id", ACTIVE_USER_ID);
-            formData.append("text", text);
-            if (voiceFile) formData.append("voice_file", voiceFile);
+      response = await fetch(`${API_URL}/voice-clone`, {
+        method: "POST",
+        body: formData
+      });
 
-            try {
-                const res = await fetch('/api/generate', { method: 'POST', body: formData });
+    } else {
+      // NORMAL TTS
+      response = await fetch(`${API_URL}/tts?text=${encodeURIComponent(text)}`, {
+        method: "POST"
+      });
+    }
 
-                if (!res.ok) {
-                    const error = await res.json();
-                    throw new Error(error.error || "System Error");
-                }
+    if (!response.ok) throw new Error("API error");
 
-                const blob = await res.blob();
-                const url = URL.createObjectURL(blob);
-                const audio = document.getElementById('audioElement');
-                
-                audio.src = url;
-                document.getElementById('downloadBtn').href = url;
-                document.getElementById('playerSection').classList.remove('hidden');
-                
-                // Update credits locally for instant feedback
-                const currentCredits = parseInt(document.getElementById('creditCount').innerText);
-                document.getElementById('creditCount').innerText = `${currentCredits - 1} Credits`;
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
 
-                // AUDIO PLAYBACK LOGIC
-                const playToggle = document.getElementById('playToggle');
-                const progressBar = document.getElementById('progressBar');
-                
-                playToggle.onclick = () => {
-                    if (audio.paused) {
-                        audio.play();
-                        playToggle.innerHTML = '<i class="fa-solid fa-pause text-xl"></i>';
-                    } else {
-                        audio.pause();
-                        playToggle.innerHTML = '<i class="fa-solid fa-play text-xl ml-1"></i>';
-                    }
-                };
+    player.src = url;
+    player.classList.remove("hidden");
+    player.play();
 
-                audio.ontimeupdate = () => {
-                    const pct = (audio.currentTime / audio.duration) * 100;
-                    progressBar.style.width = `${pct}%`;
-                    document.getElementById('timeDisplay').innerText = 
-                        `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
-                };
+    status.innerText = "Done";
 
-                audio.onended = () => {
-                    playToggle.innerHTML = '<i class="fa-solid fa-play text-xl ml-1"></i>';
-                    progressBar.style.width = '0%';
-                };
+  } catch (err) {
+    console.error(err);
+    status.innerText = "Error: API not responding (wait & retry)";
+  }
+}
+</script>
 
-            } catch (err) {
-                alert("Generation Failed: " + err.message);
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Generate";
-            }
-        }
-
-        function formatTime(seconds) {
-            if (isNaN(seconds)) return "00:00";
-            const m = Math.floor(seconds / 60);
-            const s = Math.floor(seconds % 60);
-            return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-        }
-    </script>
 </body>
 </html>
