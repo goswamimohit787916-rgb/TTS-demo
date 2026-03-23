@@ -2,214 +2,359 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Voice AI Studio</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceClone - AI Voice Generator</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: { primary: '#1d273d', border: '#e4e7eb', bgMain: '#f7f8fa' }
-                }
-            }
-        }
-    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        body { background-color: #f7f8fa; color: #1d273d; margin: 0; height: 100vh; display: flex; overflow: hidden; }
-        .platform-card { background: white; border: 1px solid #e4e7eb; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap');
         
-        /* Sidebar Hide on Mobile */
-        @media (max-width: 768px) {
-            .sidebar { display: none; }
-            .main-content { padding: 16px !important; }
-            .controls-row { flex-direction: column; }
-            .controls-row select, .controls-row button { width: 100% !important; }
+        :root {
+            --primary: 234 179 8;
         }
-
-        /* Animations */
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-        .spinner { display: none; width: 16px; height: 16px; border: 2px solid #ddd; border-top: 2px solid #1d273d; border-radius: 50%; animation: spin 1s linear infinite; }
-        .working .spinner { display: block; }
-        .working #btnText { display: none; }
         
-        /* Waveform Animation */
-        .wave-fill { position: absolute; top: 0; left: 0; height: 100%; background: rgba(29, 39, 61, 0.1); width: 0%; pointer-events: none; transition: width 0.1s linear; }
-        textarea { border: 1px solid #e4e7eb; border-radius: 0 8px 8px 8px; resize: none; outline: none; transition: border 0.3s; }
-        textarea:focus { border-color: #3b82f6; }
+        .tail-container {
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+        
+        .sidebar-link {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .sidebar-link:hover {
+            transform: translateX(4px);
+        }
+        
+        .waveform-bar {
+            animation: waveform 1.2s infinite ease-in-out;
+            background: linear-gradient(180deg, #eab308, #ca8a04);
+        }
+        
+        @keyframes waveform {
+            0%, 100% { height: 8px; }
+            50% { height: 28px; }
+        }
+        
+        .waveform-container.playing .waveform-bar:nth-child(2) { animation-delay: 0.1s; }
+        .waveform-container.playing .waveform-bar:nth-child(3) { animation-delay: 0.2s; }
+        .waveform-container.playing .waveform-bar:nth-child(4) { animation-delay: 0.3s; }
+        .waveform-container.playing .waveform-bar:nth-child(5) { animation-delay: 0.4s; }
+        .waveform-container.playing .waveform-bar:nth-child(6) { animation-delay: 0.5s; }
+        .waveform-container.playing .waveform-bar:nth-child(7) { animation-delay: 0.3s; }
+        .waveform-container.playing .waveform-bar:nth-child(8) { animation-delay: 0.2s; }
+        .waveform-container.playing .waveform-bar:nth-child(9) { animation-delay: 0.1s; }
+        
+        .textarea-custom {
+            resize: none;
+            scrollbar-width: thin;
+        }
+        
+        .player-progress {
+            accent-color: rgb(234 179 8);
+        }
+        
+        .modal {
+            animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        @keyframes modalPop {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
     </style>
 </head>
-<body class="p-0 md:p-6 flex items-center justify-center">
-
-    <div class="platform-card w-full max-w-[1020px] h-full md:h-[680px] flex overflow-hidden">
-        
-        <aside class="sidebar w-[210px] border-r border-border p-5 flex flex-col bg-white">
-            <nav class="space-y-1.5 flex-grow">
-                <div class="flex items-center gap-3 p-3 bg-slate-100 rounded-lg font-medium text-sm">
-                    <i class="fa-solid fa-bars-progress text-lg"></i> Generate
+<body class="tail-container bg-zinc-50 text-zinc-900">
+    <div class="flex h-screen overflow-hidden">
+        <!-- SIDEBAR -->
+        <div class="w-72 bg-white border-r border-zinc-200 flex flex-col shadow-xl">
+            <!-- Logo + Generate -->
+            <div class="px-6 py-8 border-b border-zinc-100 flex items-center gap-3">
+                <div class="w-9 h-9 bg-yellow-400 rounded-2xl flex items-center justify-center shadow-inner">
+                    <i class="fa-solid fa-waveform text-white text-2xl"></i>
                 </div>
-                <div class="flex items-center gap-3 p-3 text-slate-500 hover:bg-slate-50 rounded-lg text-sm cursor-pointer">
-                    <i class="fa-solid fa-headset text-lg"></i> Voices
-                </div>
-                <div class="flex items-center gap-3 p-3 text-slate-500 hover:bg-slate-50 rounded-lg text-sm cursor-pointer">
-                    <i class="fa-solid fa-diagram-project text-lg"></i> Projects
-                </div>
-                <div class="flex items-center gap-3 p-3 text-slate-500 hover:bg-slate-50 rounded-lg text-sm cursor-pointer" onclick="openKeyPrompt()">
-                    <i class="fa-solid fa-gear text-lg"></i> Settings
-                </div>
-            </nav>
-            <div class="space-y-4 border-t border-border pt-4">
-                <div class="flex items-center gap-3 p-3 text-slate-500 text-sm"><i class="fa-solid fa-question-circle text-lg"></i> Help</div>
-                <div class="flex items-center gap-3 px-3 py-1 border-t border-border pt-3">
-                    <img src="https://avatar.vercel.sh/john.png" class="size-9 rounded-full">
-                    <div class="truncate"><p class="font-semibold text-xs">John Doe</p><p class="text-[10px] text-slate-400">john@example.com</p></div>
+                <div>
+                    <span class="text-2xl font-semibold tracking-tighter">VoiceClone</span>
                 </div>
             </div>
-        </aside>
 
-        <main class="main-content flex-1 p-8 flex flex-col bg-white overflow-y-auto">
-            
-            <div class="flex border border-border rounded-t-lg p-1 w-fit bg-white">
-                <button class="px-10 py-2 font-medium text-sm text-primary">Text</button>
+            <!-- Menu -->
+            <div class="flex-1 px-3 py-6 space-y-1">
+                <a onclick="switchTab(0)" id="menu-generate"
+                   class="sidebar-link flex items-center gap-3 px-5 py-4 rounded-3xl bg-yellow-100 text-yellow-700 font-medium">
+                    <i class="fa-solid fa-bolt text-lg"></i>
+                    <span>Generate</span>
+                </a>
+                <a onclick="switchTab(1)" class="sidebar-link flex items-center gap-3 px-5 py-4 rounded-3xl hover:bg-zinc-100 text-zinc-600">
+                    <i class="fa-solid fa-headphones text-lg"></i>
+                    <span>Voices</span>
+                </a>
+                <a onclick="switchTab(2)" class="sidebar-link flex items-center gap-3 px-5 py-4 rounded-3xl hover:bg-zinc-100 text-zinc-600">
+                    <i class="fa-solid fa-folder text-lg"></i>
+                    <span>Projects</span>
+                </a>
+                <a onclick="switchTab(3)" class="sidebar-link flex items-center gap-3 px-5 py-4 rounded-3xl hover:bg-zinc-100 text-zinc-600">
+                    <i class="fa-solid fa-gear text-lg"></i>
+                    <span>Settings</span>
+                </a>
             </div>
 
-            <div class="border border-border p-5 rounded-b-lg rounded-tr-lg flex-grow flex flex-col min-h-[300px]">
-                <textarea id="textInput" class="flex-grow text-[15px] p-2 leading-relaxed" placeholder="Enter your text here or paste your script..."></textarea>
-                <div class="mt-4 flex justify-between items-center text-[13px] text-slate-400">
-                    <span id="charCount">0 / 2,500</span>
-                    <div class="flex gap-4">
-                        <button onclick="document.getElementById('fileIn').click()" class="hover:text-primary transition flex items-center gap-2">
-                            <i class="fa-solid fa-arrow-up-from-bracket"></i> Upload TXT
-                        </button>
-                        <button onclick="triggerClone()" class="hover:text-primary transition flex items-center gap-2">
-                            <i class="fa-solid fa-comment-dots"></i> Clone Voice
-                        </button>
+            <!-- Bottom -->
+            <div class="border-t border-zinc-100 p-4">
+                <a onclick="showHelp()" class="flex items-center gap-3 px-5 py-3 text-zinc-500 hover:text-zinc-700 rounded-3xl">
+                    <i class="fa-solid fa-circle-question"></i>
+                    <span class="text-sm font-medium">Help</span>
+                </a>
+                
+                <!-- User -->
+                <div onclick="toggleUserMenu()" id="user-section"
+                     class="mt-6 flex items-center gap-3 px-5 py-3 hover:bg-zinc-100 rounded-3xl cursor-pointer">
+                    <div class="w-9 h-9 bg-zinc-200 rounded-2xl overflow-hidden">
+                        <img src="https://i.pravatar.cc/128?u=john" alt="John Doe" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex-1">
+                        <div id="username" class="font-semibold text-sm">John Doe</div>
+                        <div id="useremail" class="text-xs text-zinc-500">john@example.com</div>
+                    </div>
+                    <i class="fa-solid fa-chevron-down text-xs"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="flex-1 flex flex-col">
+            <!-- Top Bar -->
+            <div class="h-16 border-b bg-white px-8 flex items-center justify-between">
+                <div class="flex items-center gap-8">
+                    <!-- Tabs -->
+                    <div onclick="switchContentTab(0)" id="tab-text"
+                         class="cursor-pointer flex items-center gap-2 font-medium text-sm border-b-2 border-yellow-400 pb-1 text-yellow-700">
+                        <i class="fa-solid fa-file-lines"></i>
+                        <span>Text</span>
+                    </div>
+                    <div onclick="switchContentTab(1)" id="tab-file"
+                         class="cursor-pointer flex items-center gap-2 font-medium text-sm text-zinc-500 hover:text-zinc-700">
+                        <i class="fa-solid fa-upload"></i>
+                        <span>File Upload</span>
                     </div>
                 </div>
-            </div>
 
-            <div class="controls-row flex items-center gap-3 mt-6">
-                <div class="flex flex-1 gap-3">
-                    <select id="voiceID" class="flex-1 p-3 border border-border rounded-lg text-sm outline-none appearance-none bg-white">
-                        <option value="21m00Tcm4TlvDq8ikWAM">Voice Default Voice</option>
-                        <option value="pNInz6obpgDQGcFmaJgB">Voice Adam</option>
-                    </select>
-                    <select class="flex-1 p-3 border border-border rounded-lg text-sm bg-white appearance-none outline-none">
-                        <option>Language English</option>
-                    </select>
-                    <select class="flex-1 p-3 border border-border rounded-lg text-sm bg-white appearance-none outline-none">
-                        <option>Style Standard</option>
-                    </select>
-                </div>
-                <button id="genBtn" onclick="handleGenerate()" class="w-32 bg-primary text-white py-3 rounded-lg font-bold hover:bg-black transition active:scale-95 flex items-center justify-center gap-2">
-                    <span id="btnText">Generate</span>
-                    <div class="spinner"></div>
-                </button>
-            </div>
-
-            <div id="playerUI" class="mt-8 border border-border p-5 rounded-xl hidden flex flex-col gap-3 bg-slate-50">
-                <div class="flex items-center gap-5">
-                    <button id="playBtn" class="size-12 rounded-full border bg-white flex items-center justify-center text-lg shadow-sm active:scale-90 transition">
-                        <i id="pIcon" class="fa-solid fa-play text-primary"></i>
+                <div class="flex items-center gap-4">
+                    <button onclick="logout()" 
+                            class="flex items-center gap-2 px-6 py-2 text-sm font-medium text-zinc-500 hover:text-red-600 transition-colors">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span>Logout</span>
                     </button>
-                    <div class="flex-1 relative h-14 bg-white rounded border overflow-hidden">
-                        <img src="image_0.png" class="h-full w-full object-cover opacity-20 grayscale pointer-events-none" style="clip-path: inset(11% 6% 28% 31%);">
-                        <div id="waveFill" class="wave-fill"></div>
-                    </div>
-                </div>
-                <div class="flex items-center justify-between text-[11px] text-slate-500">
-                    <span id="timeInfo">00:00 / 00:00</span>
-                    <div class="flex items-center gap-4">
-                        <i class="fa-solid fa-volume-high"></i>
-                        <input type="range" id="vol" min="0" max="1" step="0.1" value="1" class="w-16 accent-primary">
-                        <a id="download" download="speech.mp3" class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-download text-base"></i></a>
-                    </div>
                 </div>
             </div>
 
-        </main>
+            <!-- Content Area -->
+            <div class="flex-1 p-8 overflow-auto" id="main-content">
+                <!-- TEXT TAB -->
+                <div id="text-tab-content">
+                    <div class="max-w-3xl mx-auto">
+                        <textarea id="script-input" rows="10"
+                            class="textarea-custom w-full bg-white border border-zinc-200 focus:border-yellow-400 focus:ring-4 focus:ring-yellow-100 rounded-3xl px-7 py-6 text-lg placeholder-zinc-400 shadow-inner"
+                            placeholder="Enter your text here or paste your script..."></textarea>
+                        
+                        <div class="flex justify-between text-xs text-zinc-400 mt-2 px-2">
+                            <span id="char-count">0 / 2,500</span>
+                            <span class="text-yellow-600 font-medium">Premium • Unlimited</span>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex gap-4 mt-8">
+                            <button onclick="uploadTxtFile()" 
+                                    class="flex-1 border border-zinc-300 hover:border-zinc-400 transition-colors rounded-3xl py-4 flex items-center justify-center gap-3 font-medium">
+                                <i class="fa-solid fa-upload"></i>
+                                <span>Upload TXT</span>
+                            </button>
+                            
+                            <button onclick="showCloneModal()" 
+                                    class="flex-1 bg-zinc-900 text-white rounded-3xl py-4 flex items-center justify-center gap-3 font-medium hover:bg-black transition-all">
+                                <i class="fa-solid fa-clone"></i>
+                                <span>Clone Voice</span>
+                            </button>
+                        </div>
+
+                        <!-- Controls -->
+                        <div class="mt-10 bg-white border border-zinc-100 rounded-3xl p-8 shadow">
+                            <div class="grid grid-cols-3 gap-6">
+                                <!-- Voice -->
+                                <div>
+                                    <label class="text-xs font-medium text-zinc-500 block mb-2">VOICE</label>
+                                    <select id="voice-select" 
+                                            class="w-full bg-white border border-zinc-200 rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-yellow-400">
+                                        <!-- populated by JS -->
+                                    </select>
+                                </div>
+                                
+                                <!-- Language -->
+                                <div>
+                                    <label class="text-xs font-medium text-zinc-500 block mb-2">LANGUAGE</label>
+                                    <select id="lang-select" 
+                                            class="w-full bg-white border border-zinc-200 rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-yellow-400">
+                                        <option value="en-US">English (US)</option>
+                                        <option value="en-GB">English (UK)</option>
+                                        <option value="hi-IN">Hindi (India)</option>
+                                        <option value="es-ES">Spanish</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Style -->
+                                <div>
+                                    <label class="text-xs font-medium text-zinc-500 block mb-2">STYLE</label>
+                                    <select id="style-select" 
+                                            class="w-full bg-white border border-zinc-200 rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-yellow-400">
+                                        <option value="standard">Standard</option>
+                                        <option value="expressive">Expressive</option>
+                                        <option value="professional">Professional</option>
+                                        <option value="conversational">Conversational</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <button onclick="generateAudio()" 
+                                    class="mt-8 w-full bg-yellow-400 hover:bg-yellow-300 active:scale-95 transition-all text-zinc-900 font-semibold text-xl py-6 rounded-3xl shadow-lg flex items-center justify-center gap-3">
+                                <i class="fa-solid fa-bolt"></i>
+                                GENERATE
+                            </button>
+                        </div>
+
+                        <!-- Audio Player -->
+                        <div id="audio-player" class="hidden mt-10 bg-white border border-zinc-100 rounded-3xl p-6 shadow">
+                            <div class="flex items-center gap-5">
+                                <!-- Play Button -->
+                                <button onclick="togglePlayback()" 
+                                        id="play-btn"
+                                        class="w-12 h-12 bg-yellow-400 hover:bg-yellow-300 rounded-2xl flex items-center justify-center text-2xl shadow-md transition-all">
+                                    <i class="fa-solid fa-play" id="play-icon"></i>
+                                </button>
+
+                                <!-- Waveform -->
+                                <div id="waveform" class="flex-1 waveform-container flex items-center gap-1 h-12">
+                                    <div class="waveform-bar w-3 rounded-full"></div>
+                                    <div class="waveform-bar w-3 rounded-full"></div>
+                                    <div class="waveform-bar w-3 rounded-full"></div>
+                                    <div class="waveform-bar w-3 rounded-full"></div>
+                                    <div class="waveform-bar w-3 rounded-full"></div>
+                                    <div class="waveform-bar w-3 rounded-full"></div>
+                                    <div class="waveform-bar w-3 rounded-full"></div>
+                                    <div class="waveform-bar w-3 rounded-full"></div>
+                                    <div class="waveform-bar w-3 rounded-full"></div>
+                                </div>
+
+                                <!-- Time -->
+                                <div class="text-xs font-mono text-zinc-500 whitespace-nowrap">
+                                    <span id="current-time">00:00</span>
+                                    <span class="text-zinc-300"> / </span>
+                                    <span id="total-time">00:15</span>
+                                </div>
+
+                                <!-- Volume -->
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-volume-low text-zinc-400"></i>
+                                    <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.8"
+                                           class="w-24 accent-yellow-400">
+                                </div>
+
+                                <!-- Download -->
+                                <button onclick="downloadAudio()" 
+                                        class="w-9 h-9 flex items-center justify-center text-zinc-400 hover:text-yellow-600 transition-colors">
+                                    <i class="fa-solid fa-download"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Progress -->
+                            <input type="range" id="progress-bar" min="0" max="100" value="0"
+                                   class="player-progress w-full mt-4 accent-yellow-400">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FILE UPLOAD TAB (hidden initially) -->
+                <div id="file-tab-content" class="hidden max-w-3xl mx-auto">
+                    <div class="border-2 border-dashed border-zinc-300 rounded-3xl h-96 flex flex-col items-center justify-center">
+                        <i class="fa-solid fa-cloud-arrow-up text-6xl text-zinc-300 mb-6"></i>
+                        <p class="text-xl font-medium text-zinc-600">Drop your TXT or MP3 file here</p>
+                        <p class="text-sm text-zinc-400 mt-2">or</p>
+                        <button onclick="document.getElementById('file-input-hidden').click()" 
+                                class="mt-6 px-8 py-4 bg-white border border-zinc-300 rounded-3xl text-sm font-medium hover:border-yellow-400">
+                            Browse Files
+                        </button>
+                        <input type="file" id="file-input-hidden" class="hidden" accept=".txt,.mp3">
+                    </div>
+                    <p class="text-center text-xs text-zinc-400 mt-8">Supported: TXT scripts • MP3 voice samples (max 10MB)</p>
+                </div>
+            </div>
+
+            <!-- Footer info -->
+            <div class="h-14 bg-white border-t flex items-center px-8 text-xs text-zinc-400">
+                <div class="flex-1">Cloudflare Pages • Secure • No API keys exposed</div>
+                <div>VoiceClone Demo • Built for you</div>
+            </div>
+        </div>
     </div>
 
-    <input type="file" id="fileIn" class="hidden" accept=".txt">
-    <audio id="audioEngine"></audio>
+    <!-- CLONE VOICE MODAL -->
+    <div id="clone-modal" onclick="if(event.target.id==='clone-modal')hideCloneModal()" 
+         class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+        <div class="modal bg-white rounded-3xl w-full max-w-md p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-semibold">Clone Your Voice</h2>
+                <button onclick="hideCloneModal()" class="text-3xl leading-none text-zinc-300 hover:text-zinc-500">×</button>
+            </div>
+            
+            <div class="border border-dashed border-zinc-300 rounded-3xl p-10 text-center">
+                <input type="file" id="voice-sample-input" accept="audio/*" class="hidden">
+                <button onclick="document.getElementById('voice-sample-input').click()" 
+                        class="text-yellow-600 hover:text-yellow-700 font-medium flex items-center gap-3 mx-auto">
+                    <i class="fa-solid fa-microphone text-2xl"></i>
+                    <span>Upload 10-second voice sample</span>
+                </button>
+                <p class="text-xs text-zinc-400 mt-4">MP3 or WAV • Clear speech recommended</p>
+            </div>
 
-    <script>
-        let KEY = localStorage.getItem('eleven_key') || '';
-        const input = document.getElementById('textInput');
-        const audio = document.getElementById('audioEngine');
+            <button onclick="cloneVoice()" 
+                    class="mt-8 w-full py-6 bg-black text-white rounded-3xl font-semibold text-lg active:scale-95 transition-all">
+                CLONE MY VOICE
+            </button>
+            
+            <div id="clone-status" class="hidden mt-4 text-center text-green-600 font-medium"></div>
+        </div>
+    </div>
 
-        function openKeyPrompt() {
-            const val = prompt("Enter ElevenLabs API Key:", KEY);
-            if(val) { KEY = val; localStorage.setItem('eleven_key', val); }
-        }
+    <!-- USER MENU POPOVER -->
+    <div id="user-menu" onclick="if(event.target.id==='user-menu')toggleUserMenu()" 
+         class="hidden fixed inset-0 bg-black/30 flex items-end justify-end p-8 z-50">
+        <div class="bg-white rounded-3xl shadow-2xl w-72 overflow-hidden">
+            <div class="p-6 border-b">
+                <div class="flex items-center gap-4">
+                    <img src="https://i.pravatar.cc/128?u=john" class="w-12 h-12 rounded-2xl">
+                    <div>
+                        <div class="font-semibold">John Doe</div>
+                        <div class="text-sm text-zinc-500">john@example.com</div>
+                    </div>
+                </div>
+            </div>
+            <div class="py-2">
+                <a onclick="logout()" class="flex items-center gap-4 px-6 py-4 hover:bg-zinc-50 text-red-600">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Sign out</span>
+                </a>
+            </div>
+        </div>
+    </div>
 
-        // Logic: Import Text
-        document.getElementById('fileIn').onchange = (e) => {
-            const reader = new FileReader();
-            reader.onload = (f) => { input.value = f.target.result; updateCount(); };
-            reader.readAsText(e.target.files[0]);
-        };
-
-        // Logic: Generate Speech
-        async function handleGenerate() {
-            if(!KEY) return openKeyPrompt();
-            if(!input.value) return alert("Please enter text.");
-
-            const btn = document.getElementById('genBtn');
-            btn.classList.add('working');
-            btn.disabled = true;
-
-            try {
-                const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${document.getElementById('voiceID').value}`, {
-                    method: 'POST',
-                    headers: { 'xi-api-key': KEY, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        text: input.value,
-                        model_id: "eleven_multilingual_v2",
-                        voice_settings: { stability: 0.5, similarity_boost: 0.75 }
-                    })
-                });
-
-                if(!res.ok) throw new Error("Check API Key or Credits");
-
-                const blob = await res.blob();
-                const url = URL.createObjectURL(blob);
-                audio.src = url;
-                document.getElementById('download').href = url;
-                document.getElementById('playerUI').classList.remove('hidden');
-                audio.play();
-            } catch (err) { alert(err.message); } 
-            finally { btn.classList.remove('working'); btn.disabled = false; }
-        }
-
-        // Logic: Audio Player Progress
-        const pBtn = document.getElementById('playBtn');
-        pBtn.onclick = () => audio.paused ? audio.play() : audio.pause();
-        
-        audio.onplay = () => document.getElementById('pIcon').className = 'fa-solid fa-pause';
-        audio.onpause = () => document.getElementById('pIcon').className = 'fa-solid fa-play';
-        
-        audio.ontimeupdate = () => {
-            const pct = (audio.currentTime / audio.duration) * 100;
-            document.getElementById('waveFill').style.width = pct + '%';
-            document.getElementById('timeInfo').innerText = `${fmt(audio.currentTime)} / ${fmt(audio.duration || 0)}`;
-        };
-
-        function fmt(s) {
-            const m = Math.floor(s/60).toString().padStart(2, '0');
-            const sec = Math.floor(s%60).toString().padStart(2, '0');
-            return `${m}:${sec}`;
-        }
-
-        function updateCount() {
-            document.getElementById('charCount').innerText = `${input.value.length.toLocaleString()} / 2,500`;
-        }
-        input.oninput = updateCount;
-        document.getElementById('vol').oninput = (e) => audio.volume = e.target.value;
-        function triggerClone() { alert("Voice Cloning metadata ready. Requires audio file upload."); }
-    </script>
-</body>
-</html>
+    <!-- LOGIN MODAL (shown on first load if not logged in) -->
+    <div id="login-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[999]">
+        <div class="modal bg-white w-full max-w-sm rounded-3xl p-10">
+            <div class="text-center mb-8">
+                <div class="mx-auto w-14 h-14 bg-yellow-400 rounded-2xl flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-waveform text-white text-4xl"></i>
+                </div>
+                <h1 class="text-3xl font-bold tracking-tighter">Welcome back</h1>
+                <p class="text-zinc-500 mt-2">Sign in to continue</p>
+            </div>
+            
+            <input id="login-email" type="email" value="john@example.com" 
+                   class="w-full border border-zinc-200 rou
