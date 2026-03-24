@@ -3,7 +3,7 @@ export async function onRequestPost(context) {
   const body = await context.request.json();
 
   // 🔴 PUT YOUR GRADIO LINK HERE
-  const GRADIO = "https://xxxxx.gradio.live/run/predict";
+  const GRADIO = "https://f51adb50cc8f0e4553.gradio.live/run/predict";
 
   const res = await fetch(GRADIO, {
     method: "POST",
