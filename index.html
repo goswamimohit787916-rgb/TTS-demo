@@ -1,32 +1,21 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html><html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Qwen Voice Studio</title><style>
+<title>Qwen Voice Studio</title><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>
 body {
     margin:0;
     font-family: Arial;
     background:#0f172a;
     color:white;
-}
-.container {
-    max-width:700px;
-    margin:auto;
+    text-align:center;
     padding:20px;
 }
-h1 {
-    text-align:center;
+.container {
+    max-width:600px;
+    margin:auto;
 }
-textarea {
+textarea, input {
     width:100%;
-    height:120px;
-    padding:10px;
-    border-radius:10px;
-    border:none;
-}
-input, select {
-    width:100%;
-    padding:10px;
+    padding:12px;
     margin-top:10px;
     border-radius:10px;
     border:none;
@@ -39,58 +28,27 @@ button {
     border:none;
     border-radius:10px;
     font-weight:bold;
-    cursor:pointer;
 }
 audio {
     width:100%;
     margin-top:20px;
 }
-.section {
-    margin-top:20px;
-}
-label {
-    font-size:14px;
-    opacity:0.8;
-}
-.slider {
-    width:100%;
-}
 .status {
     margin-top:10px;
-    text-align:center;
     color:#38bdf8;
 }
-</style></head><body><div class="container"><h1>Qwen Voice Studio</h1><div class="section">
-<label>Text</label>
-<textarea id="text" placeholder="Type your text here..."></textarea>
-</div><div class="section">
-<label>Voice Style (optional)</label>
-<input id="voice" placeholder="e.g. deep male, soft female, cinematic narrator">
-</div><div class="section">
-<label>Temperature</label>
-<input type="range" id="temperature" min="0" max="1" step="0.1" value="0.7" class="slider"><label>Top P</label>
-<input type="range" id="top_p" min="0" max="1" step="0.1" value="0.9" class="slider">
-
-<label>Repetition Penalty</label>
-<input type="range" id="rep" min="1" max="2" step="0.1" value="1.1" class="slider">
-
-</div><button onclick="generate()">Generate Voice</button>
+</style></head><body><div class="container"><h2>Qwen Voice Studio</h2><textarea id="text" placeholder="Enter text"></textarea><input id="voice" placeholder="Voice style (optional)"><button onclick="generate()">Generate Voice</button>
 
 <div class="status" id="status"></div><audio id="player" controls></audio>
 
-<a id="download" download="qwen_audio.wav">
-<button>Download Audio</button>
-</a></div><script>
+</div><script>
 
-const API = "https://3a31d8403688d660b3.gradio.live/run/predict";
+const API = "https://7df7081e6a5879ee0c.gradio.live/run/predict";
 
 async function generate() {
 
     const text = document.getElementById("text").value;
     const voice = document.getElementById("voice").value;
-    const temperature = parseFloat(document.getElementById("temperature").value);
-    const top_p = parseFloat(document.getElementById("top_p").value);
-    const rep = parseFloat(document.getElementById("rep").value);
 
     const status = document.getElementById("status");
 
@@ -107,18 +65,23 @@ async function generate() {
             method: "POST",
             headers: {"Content-Type":"application/json"},
             body: JSON.stringify({
-                data: [text, voice, temperature, top_p, rep]
+                data: [text, voice, 0.7, 0.9, 1.1]
             })
         });
 
         const result = await res.json();
 
+        console.log(result);
+
+        if (!result || !result.data || !result.data[0]) {
+            status.innerText = "API Error";
+            return;
+        }
+
         const base64Audio = result.data[0];
 
-        const audioSrc = "data:audio/wav;base64," + base64Audio;
-
-        document.getElementById("player").src = audioSrc;
-        document.getElementById("download").href = audioSrc;
+        document.getElementById("player").src =
+            "data:audio/wav;base64," + base64Audio;
 
         status.innerText = "Done";
 
