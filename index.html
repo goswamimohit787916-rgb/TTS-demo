@@ -1,90 +1,69 @@
-<!DOCTYPE html><html>
+<!DOCTYPE html>
+<html>
 <head>
-<title>Qwen Voice Studio</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"><style>
-body { font-family: Arial; background:#0f172a; color:white; text-align:center; padding:20px; }
-.container { max-width:700px; margin:auto; }
-input, textarea, select { width:100%; padding:12px; margin-top:10px; border-radius:10px; border:none; }
-button { width:100%; padding:14px; margin-top:15px; background:#22c55e; border:none; border-radius:10px; }
-audio { width:100%; margin-top:20px; }
-.status { margin-top:10px; color:#38bdf8; }
-</style></head><body><div class="container"><h2>Qwen Voice Studio</h2><textarea id="text" placeholder="Enter text"></textarea><select id="preset">
-<option value="">Default</option>
-<option value="Deep male cinematic voice">Deep Male</option>
-<option value="Soft female calm voice">Soft Female</option>
-<option value="Energetic voice">Energetic</option>
-</select><input id="customVoice" placeholder="Custom voice style"><input type="file" id="voiceFile" accept=".pt"><label>Temperature</label>
-<input type="range" id="temp" min="0" max="1" step="0.1" value="0.7">
+<meta charset="UTF-8">
+<title>VoiceGen</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
 
-<label>Top P</label>
-<input type="range" id="top_p" min="0" max="1" step="0.1" value="0.9">
+<body class="bg-gray-100">
 
-<label>Repetition Penalty</label>
-<input type="range" id="rep" min="1" max="2" step="0.1" value="1.1">
+<div class="flex h-screen">
 
-<button onclick="generate()">Generate</button>
+<!-- SIDEBAR -->
+<div class="w-64 bg-gradient-to-b from-blue-900 to-blue-700 text-white p-6">
+    <h1 class="text-2xl font-bold mb-8">VoiceGen</h1>
 
-<div class="status" id="status"></div><audio id="player" controls></audio>
+    <div class="space-y-4">
+        <div class="bg-blue-600 p-2 rounded">Generate</div>
+        <div>Voice Library</div>
+        <div>History</div>
+        <div>Upgrade</div>
+    </div>
+</div>
 
-<a id="download" download="audio.wav">
-<button>Download</button>
-</a></div><script>
+<!-- MAIN -->
+<div class="flex-1 p-8">
 
-const API = "https://c43fe42c6616fc03bf.gradio.live/run/predict";
+    <textarea id="text"
+        class="w-full h-40 p-4 border rounded"
+        placeholder="Paste your script here..."></textarea>
 
+    <button onclick="generate()" 
+        class="mt-4 bg-blue-600 text-white px-6 py-3 rounded">
+        Generate Voice
+    </button>
+
+    <audio id="player" controls class="w-full mt-6"></audio>
+
+</div>
+</div>
+
+<script>
 async function generate() {
 
     const text = document.getElementById("text").value;
-    const preset = document.getElementById("preset").value;
-    const custom = document.getElementById("customVoice").value;
-    const file = document.getElementById("voiceFile").files[0];
 
-    const temp = parseFloat(document.getElementById("temp").value);
-    const top_p = parseFloat(document.getElementById("top_p").value);
-    const rep = parseFloat(document.getElementById("rep").value);
+    const res = await fetch("https://507c0544b99d6bed59.gradio.live/run/predict", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            data: [text]
+        })
+    });
 
-    const status = document.getElementById("status");
+    const data = await res.json();
 
-    if (!text) {
-        status.innerText = "Enter text";
-        return;
-    }
+    console.log(data);
 
-    status.innerText = "Generating...";
+    // IMPORTANT: extract correct field
+    const audio = data.data[0];
 
-    let voice = custom || preset || "";
-
-    try {
-
-        const formData = new FormData();
-
-        formData.append("data", JSON.stringify([text, voice, null, temp, top_p, rep]));
-
-        if (file) {
-            formData.append("files", file);
-        }
-
-        const res = await fetch(API, {
-            method: "POST",
-            body: formData
-        });
-
-        const result = await res.json();
-        console.log(result);
-
-        const base64Audio = result.data[0];
-
-        const src = "data:audio/wav;base64," + base64Audio;
-
-        document.getElementById("player").src = src;
-        document.getElementById("download").href = src;
-
-        status.innerText = "Done";
-
-    } catch (e) {
-        status.innerText = "Error: " + e.message;
-    }
+    document.getElementById("player").src = audio;
 }
+</script>
 
-</script></body>
+</body>
 </html>
