@@ -1,97 +1,131 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AI Voice Generator</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Qwen Voice Studio</title><style>
+body {
+    margin:0;
+    font-family: Arial;
+    background:#0f172a;
+    color:white;
+}
+.container {
+    max-width:700px;
+    margin:auto;
+    padding:20px;
+}
+h1 {
+    text-align:center;
+}
+textarea {
+    width:100%;
+    height:120px;
+    padding:10px;
+    border-radius:10px;
+    border:none;
+}
+input, select {
+    width:100%;
+    padding:10px;
+    margin-top:10px;
+    border-radius:10px;
+    border:none;
+}
+button {
+    width:100%;
+    padding:14px;
+    margin-top:15px;
+    background:#22c55e;
+    border:none;
+    border-radius:10px;
+    font-weight:bold;
+    cursor:pointer;
+}
+audio {
+    width:100%;
+    margin-top:20px;
+}
+.section {
+    margin-top:20px;
+}
+label {
+    font-size:14px;
+    opacity:0.8;
+}
+.slider {
+    width:100%;
+}
+.status {
+    margin-top:10px;
+    text-align:center;
+    color:#38bdf8;
+}
+</style></head><body><div class="container"><h1>Qwen Voice Studio</h1><div class="section">
+<label>Text</label>
+<textarea id="text" placeholder="Type your text here..."></textarea>
+</div><div class="section">
+<label>Voice Style (optional)</label>
+<input id="voice" placeholder="e.g. deep male, soft female, cinematic narrator">
+</div><div class="section">
+<label>Temperature</label>
+<input type="range" id="temperature" min="0" max="1" step="0.1" value="0.7" class="slider"><label>Top P</label>
+<input type="range" id="top_p" min="0" max="1" step="0.1" value="0.9" class="slider">
 
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
+<label>Repetition Penalty</label>
+<input type="range" id="rep" min="1" max="2" step="0.1" value="1.1" class="slider">
 
-<body class="bg-black text-white flex items-center justify-center min-h-screen">
+</div><button onclick="generate()">Generate Voice</button>
 
-<div class="w-full max-w-xl p-4">
+<div class="status" id="status"></div><audio id="player" controls></audio>
 
-  <h1 class="text-2xl font-bold mb-4 text-center">Qwen3 AI Voice</h1>
+<a id="download" download="qwen_audio.wav">
+<button>Download Audio</button>
+</a></div><script>
 
-  <!-- TEXT INPUT -->
-  <textarea id="text"
-    class="w-full p-3 rounded bg-gray-900 border border-gray-700"
-    rows="5"
-    placeholder="Enter text here..."></textarea>
-
-  <!-- FILE INPUT -->
-  <input type="file" id="audio" class="mt-3 w-full" accept="audio/*"/>
-
-  <!-- BUTTON -->
-  <button onclick="generate()"
-    class="mt-4 w-full bg-blue-600 hover:bg-blue-700 p-3 rounded">
-    Generate Audio
-  </button>
-
-  <!-- STATUS -->
-  <p id="status" class="mt-3 text-sm text-gray-400"></p>
-
-  <!-- AUDIO PLAYER -->
-  <audio id="player" controls class="mt-4 w-full hidden"></audio>
-
-</div>
-
-<script>
-const API_URL = "https://3a31d8403688d660b3.gradio.live/run/predict";
+const API = "https://3a31d8403688d660b3.gradio.live/run/predict";
 
 async function generate() {
-  const text = document.getElementById("text").value;
-  const fileInput = document.getElementById("audio");
-  const status = document.getElementById("status");
-  const player = document.getElementById("player");
 
-  if (!text) {
-    alert("Enter text");
-    return;
-  }
+    const text = document.getElementById("text").value;
+    const voice = document.getElementById("voice").value;
+    const temperature = parseFloat(document.getElementById("temperature").value);
+    const top_p = parseFloat(document.getElementById("top_p").value);
+    const rep = parseFloat(document.getElementById("rep").value);
 
-  status.innerText = "Generating... (first time may take 30s)";
-  player.classList.add("hidden");
+    const status = document.getElementById("status");
 
-  try {
-    let response;
-
-    // VOICE CLONE MODE
-    if (fileInput.files.length > 0) {
-      const formData = new FormData();
-      formData.append("text", text);
-      formData.append("audio", fileInput.files[0]);
-
-      response = await fetch(`${API_URL}/voice-clone`, {
-        method: "POST",
-        body: formData
-      });
-
-    } else {
-      // NORMAL TTS
-      response = await fetch(`${API_URL}/tts?text=${encodeURIComponent(text)}`, {
-        method: "POST"
-      });
+    if (!text) {
+        status.innerText = "Enter text first";
+        return;
     }
 
-    if (!response.ok) throw new Error("API error");
+    status.innerText = "Generating...";
 
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
+    try {
 
-    player.src = url;
-    player.classList.remove("hidden");
-    player.play();
+        const res = await fetch(API, {
+            method: "POST",
+            headers: {"Content-Type":"application/json"},
+            body: JSON.stringify({
+                data: [text, voice, temperature, top_p, rep]
+            })
+        });
 
-    status.innerText = "Done";
+        const result = await res.json();
 
-  } catch (err) {
-    console.error(err);
-    status.innerText = "Error: API not responding (wait & retry)";
-  }
+        const base64Audio = result.data[0];
+
+        const audioSrc = "data:audio/wav;base64," + base64Audio;
+
+        document.getElementById("player").src = audioSrc;
+        document.getElementById("download").href = audioSrc;
+
+        status.innerText = "Done";
+
+    } catch (e) {
+        status.innerText = "Error: " + e.message;
+    }
 }
-</script>
 
-</body>
+</script></body>
 </html>
