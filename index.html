@@ -1,93 +1,28 @@
 <!DOCTYPE html><html>
-<head>
-<title>Qwen Voice Studio</title><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>
-body {
-    margin:0;
-    font-family: Arial;
-    background:#0f172a;
-    color:white;
-    text-align:center;
-    padding:20px;
-}
-.container {
-    max-width:600px;
-    margin:auto;
-}
-textarea, input {
-    width:100%;
-    padding:12px;
-    margin-top:10px;
-    border-radius:10px;
-    border:none;
-}
-button {
-    width:100%;
-    padding:14px;
-    margin-top:15px;
-    background:#22c55e;
-    border:none;
-    border-radius:10px;
-    font-weight:bold;
-}
-audio {
-    width:100%;
-    margin-top:20px;
-}
-.status {
-    margin-top:10px;
-    color:#38bdf8;
-}
-</style></head><body><div class="container"><h2>Qwen Voice Studio</h2><textarea id="text" placeholder="Enter text"></textarea><input id="voice" placeholder="Voice style (optional)"><button onclick="generate()">Generate Voice</button>
+<body><h2>Qwen TTS</h2><textarea id="text"></textarea><br><br><button onclick="generate()">Generate</button>
 
-<div class="status" id="status"></div><audio id="player" controls></audio>
+<audio id="player" controls></audio>
 
-</div><script>
+<script>
 
-const API = "https://7df7081e6a5879ee0c.gradio.live/run/predict";
+const API = "/api";
 
 async function generate() {
 
-    const text = document.getElementById("text").value;
-    const voice = document.getElementById("voice").value;
+  const res = await fetch(API, {
+    method:"POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({
+      text: document.getElementById("text").value
+    })
+  });
 
-    const status = document.getElementById("status");
+  const result = await res.json();
 
-    if (!text) {
-        status.innerText = "Enter text first";
-        return;
-    }
+  const base64Audio = result.data[0];
 
-    status.innerText = "Generating...";
-
-    try {
-
-        const res = await fetch(API, {
-            method: "POST",
-            headers: {"Content-Type":"application/json"},
-            body: JSON.stringify({
-                data: [text, voice, 0.7, 0.9, 1.1]
-            })
-        });
-
-        const result = await res.json();
-
-        console.log(result);
-
-        if (!result || !result.data || !result.data[0]) {
-            status.innerText = "API Error";
-            return;
-        }
-
-        const base64Audio = result.data[0];
-
-        document.getElementById("player").src =
-            "data:audio/wav;base64," + base64Audio;
-
-        status.innerText = "Done";
-
-    } catch (e) {
-        status.innerText = "Error: " + e.message;
-    }
+  document.getElementById("player").src =
+    "data:audio/wav;base64," + base64Audio;
 }
 
 </script></body>
