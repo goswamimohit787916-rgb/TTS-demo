@@ -1,6 +1,6 @@
 <!DOCTYPE html><html>
 <head>
-<title>Qwen Voice Studio Pro</title>
+<title>Qwen Voice Studio</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"><style>
 body {
     font-family: Arial;
@@ -27,7 +27,6 @@ button {
     background:#22c55e;
     border:none;
     border-radius:10px;
-    font-weight:bold;
 }
 audio {
     width:100%;
@@ -37,16 +36,13 @@ audio {
     margin-top:10px;
     color:#38bdf8;
 }
-.hidden { display:none; }
-</style></head><body><div class="container"><h2>Login</h2><input id="username" placeholder="Username">
-<input id="password" type="password" placeholder="Password">
-<button onclick="login()">Login</button><div id="app" class="hidden"><h2>Qwen Voice Studio Pro</h2><textarea id="text" placeholder="Enter text..."></textarea><!-- Voice Selection --><select id="voicePreset">
-<option value="">Default Voice</option>
-<option value="A deep male cinematic voice">Deep Male</option>
-<option value="A soft female calm voice">Soft Female</option>
-<option value="Energetic young male voice">Energetic Male</option>
-<option value="Professional news anchor voice">News Anchor</option>
-</select><!-- Custom Voice --><input id="voiceCustom" placeholder="Custom voice style (optional)"><!-- Voice Clone Upload --><input type="file" id="voiceFile" accept=".pt"><!-- Controls --><label>Temperature</label>
+</style></head><body><div class="container"><h2>Qwen Voice Studio</h2><textarea id="text" placeholder="Enter text"></textarea><select id="preset">
+<option value="">Default</option>
+<option value="Deep male cinematic voice">Deep Male</option>
+<option value="Soft female calm voice">Soft Female</option>
+<option value="Energetic young male voice">Energetic</option>
+<option value="Professional news anchor voice">News</option>
+</select><input id="customVoice" placeholder="Custom voice style"><input type="file" id="voiceFile" accept=".pt"><label>Temperature</label>
 <input type="range" id="temp" min="0" max="1" step="0.1" value="0.7">
 
 <label>Top P</label>
@@ -55,40 +51,21 @@ audio {
 <label>Repetition Penalty</label>
 <input type="range" id="rep" min="1" max="2" step="0.1" value="1.1">
 
-<button onclick="generate()">Generate Voice</button>
+<button onclick="generate()">Generate</button>
 
 <div class="status" id="status"></div><audio id="player" controls></audio>
 
 <a id="download" download="audio.wav">
-<button>Download Audio</button>
-</a></div></div><script>
+<button>Download</button>
+</a></div><script>
 
-const API = "https://f51adb50cc8f0e4553.gradio.live/run/predict";
+const API = "https://d93c20360637ca41ff.gradio.live/run/predict";
 
-// ================= LOGIN =================
-function login() {
-    const u = document.getElementById("username").value;
-    const p = document.getElementById("password").value;
-
-    if (!u || !p) {
-        alert("Enter credentials");
-        return;
-    }
-
-    localStorage.setItem("user", u);
-    document.getElementById("app").classList.remove("hidden");
-}
-
-if (localStorage.getItem("user")) {
-    document.getElementById("app").classList.remove("hidden");
-}
-
-// ================= GENERATE =================
 async function generate() {
 
     const text = document.getElementById("text").value;
-    const preset = document.getElementById("voicePreset").value;
-    const custom = document.getElementById("voiceCustom").value;
+    const preset = document.getElementById("preset").value;
+    const custom = document.getElementById("customVoice").value;
     const file = document.getElementById("voiceFile").files[0];
 
     const temp = parseFloat(document.getElementById("temp").value);
@@ -104,41 +81,31 @@ async function generate() {
 
     status.innerText = "Generating...";
 
-    // 🎯 voice priority
     let voice = custom || preset || "";
-
-    // ⚠️ voice clone not supported directly
-    if (file) {
-        status.innerText = "Voice clone requires backend support";
-        return;
-    }
 
     try {
 
+        const formData = new FormData();
+        formData.append("data", JSON.stringify([text, voice, null, temp, top_p, rep]));
+
+        if (file) {
+            formData.append("files", file);
+        }
+
         const res = await fetch(API, {
-            method:"POST",
-            headers: {"Content-Type":"application/json"},
-            body: JSON.stringify({
-                data: [text, voice, temp, top_p, rep]
-            })
+            method: "POST",
+            body: formData
         });
 
         const result = await res.json();
         console.log(result);
 
-        let base64Audio = null;
+        const base64Audio = result.data[0];
 
-        if (result.data && typeof result.data[0] === "string") {
-            base64Audio = result.data[0];
-        } else {
-            status.innerText = "API Error";
-            return;
-        }
+        const src = "data:audio/wav;base64," + base64Audio;
 
-        const audioSrc = "data:audio/wav;base64," + base64Audio;
-
-        document.getElementById("player").src = audioSrc;
-        document.getElementById("download").href = audioSrc;
+        document.getElementById("player").src = src;
+        document.getElementById("download").href = src;
 
         status.innerText = "Done";
 
