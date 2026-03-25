@@ -1,67 +1,138 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>VoiceGen</title>
-<script src="https://cdn.tailwindcss.com"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Voice Studio</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter;}
+body{background:#f3f4f6;display:flex;height:100vh;}
+
+.sidebar{
+  width:220px;background:#fff;border-right:1px solid #e5e7eb;padding:20px;
+}
+.menu{padding:12px;border-radius:8px;margin-bottom:10px;cursor:pointer;}
+.menu.active{background:#f1f5f9;font-weight:600;}
+
+.main{flex:1;padding:30px;}
+.container{
+  background:#fff;border-radius:12px;padding:25px;
+  box-shadow:0 5px 20px rgba(0,0,0,0.05);
+}
+
+textarea{
+  width:100%;height:180px;border:1px solid #e5e7eb;
+  border-radius:10px;padding:15px;font-size:14px;
+}
+
+.controls{display:flex;gap:10px;margin-top:15px;flex-wrap:wrap;}
+
+select,button{
+  padding:10px;border-radius:8px;border:1px solid #e5e7eb;
+}
+
+button.primary{
+  background:#111827;color:#fff;cursor:pointer;
+}
+
+.player{margin-top:20px;padding:15px;background:#f9fafb;border-radius:12px;}
+
+.progress{
+  height:6px;background:#ddd;border-radius:6px;overflow:hidden;margin-top:10px;
+}
+.bar{height:100%;width:0;background:#3b82f6;}
+
+@media(max-width:768px){
+  body{flex-direction:column;}
+  .sidebar{width:100%;display:flex;overflow-x:auto;}
+}
+</style>
 </head>
 
-<body class="bg-gray-100">
+<body>
 
-<div class="flex h-screen">
+<div class="sidebar">
+  <div class="menu active">Generate</div>
+  <div class="menu">Voices</div>
+  <div class="menu">Projects</div>
+</div>
 
-<!-- SIDEBAR -->
-<div class="w-64 bg-gradient-to-b from-blue-900 to-blue-700 text-white p-6">
-    <h1 class="text-2xl font-bold mb-8">VoiceGen</h1>
+<div class="main">
+  <div class="container">
 
-    <div class="space-y-4">
-        <div class="bg-blue-600 p-2 rounded">Generate</div>
-        <div>Voice Library</div>
-        <div>History</div>
-        <div>Upgrade</div>
+    <h2>Generate Voice</h2>
+
+    <textarea id="text" placeholder="Enter text..."></textarea>
+
+    <div class="controls">
+      <select id="voice">
+        <option>Premanandvoice</option>
+      </select>
+
+      <select id="quality">
+        <option value="HD">HD</option>
+        <option value="SD">SD</option>
+        <option value="RAW">RAW</option>
+      </select>
+
+      <button class="primary" onclick="generate()">Generate</button>
     </div>
-</div>
 
-<!-- MAIN -->
-<div class="flex-1 p-8">
+    <div class="progress"><div class="bar" id="bar"></div></div>
 
-    <textarea id="text"
-        class="w-full h-40 p-4 border rounded"
-        placeholder="Paste your script here..."></textarea>
+    <div class="player">
+      <audio id="audio" controls></audio>
+      <br><br>
+      <a id="download" download>⬇ Download</a>
+    </div>
 
-    <button onclick="generate()" 
-        class="mt-4 bg-blue-600 text-white px-6 py-3 rounded">
-        Generate Voice
-    </button>
-
-    <audio id="player" controls class="w-full mt-6"></audio>
-
-</div>
+  </div>
 </div>
 
 <script>
-async function generate() {
+const API_URL = "https://e48d46a8e07012e491.gradio.live/";
 
-    const text = document.getElementById("text").value;
+/* ===== GENERATE ===== */
+async function generate(){
 
-    const res = await fetch("https://e48d46a8e07012e491.gradio.live/run/predict", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            data: [text]
-        })
+  const text = document.getElementById("text").value;
+  const voice = document.getElementById("voice").value;
+  const quality = document.getElementById("quality").value;
+  const bar = document.getElementById("bar");
+
+  bar.style.width = "10%";
+
+  try {
+
+    const res = await fetch(`${API_URL}/run/predict`, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        data: [text, null, voice, 0.7, quality]
+      })
     });
 
-    const data = await res.json();
+    bar.style.width = "60%";
 
-    console.log(data);
+    const json = await res.json();
 
-    // IMPORTANT: extract correct field
-    const audio = data.data[0];
+    // ⚠️ adjust index based on your Gradio outputs
+    const audioUrl = json.data[0];
 
-    document.getElementById("player").src = audio;
+    document.getElementById("audio").src = audioUrl;
+    document.getElementById("download").href = audioUrl;
+
+    bar.style.width = "100%";
+
+    setTimeout(()=>bar.style.width="0%",1000);
+
+  } catch (e){
+    alert("Error connecting to backend");
+    bar.style.width="0%";
+  }
 }
 </script>
 
